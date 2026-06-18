@@ -5,10 +5,51 @@ import Label from "@/components/form/Label";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import React, { useState } from "react";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [fname, setFname] = useState("");
+  const [lname, setLname] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          name: `${fname} ${lname}`.trim(), 
+          username, 
+          email, 
+          password 
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        Cookies.set("auth_token", data.access_token, { expires: isChecked ? 7 : 1 });
+        router.push("/");
+      } else {
+        // Handle validation errors from Laravel
+        if (data.errors) {
+          const firstError = Object.values(data.errors)[0] as string[];
+          setError(firstError[0]);
+        } else {
+          setError(data.message || "Registration failed");
+        }
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+    }
+  };
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full overflow-y-auto no-scrollbar">
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
@@ -83,7 +124,12 @@ export default function SignUpForm() {
                 </span>
               </div>
             </div>
-            <form>
+            {error && (
+              <div className="mb-4 p-3 text-sm text-error-700 bg-error-50 rounded-lg">
+                {error}
+              </div>
+            )}
+            <form onSubmit={handleRegister}>
               <div className="space-y-5">
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   {/* <!-- First Name --> */}
@@ -95,6 +141,8 @@ export default function SignUpForm() {
                       type="text"
                       id="fname"
                       name="fname"
+                      value={fname}
+                      onChange={(e: any) => setFname(e.target.value)}
                       placeholder="Enter your first name"
                     />
                   </div>
@@ -107,9 +155,25 @@ export default function SignUpForm() {
                       type="text"
                       id="lname"
                       name="lname"
+                      value={lname}
+                      onChange={(e: any) => setLname(e.target.value)}
                       placeholder="Enter your last name"
                     />
                   </div>
+                </div>
+                {/* <!-- Username --> */}
+                <div>
+                  <Label>
+                    Username<span className="text-error-500">*</span>
+                  </Label>
+                  <Input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={username}
+                    onChange={(e: any) => setUsername(e.target.value)}
+                    placeholder="Enter your username"
+                  />
                 </div>
                 {/* <!-- Email --> */}
                 <div>
@@ -120,6 +184,8 @@ export default function SignUpForm() {
                     type="email"
                     id="email"
                     name="email"
+                    value={email}
+                    onChange={(e: any) => setEmail(e.target.value)}
                     placeholder="Enter your email"
                   />
                 </div>
@@ -131,6 +197,8 @@ export default function SignUpForm() {
                   <div className="relative">
                     <Input
                       placeholder="Enter your password"
+                      value={password}
+                      onChange={(e: any) => setPassword(e.target.value)}
                       type={showPassword ? "text" : "password"}
                     />
                     <span
