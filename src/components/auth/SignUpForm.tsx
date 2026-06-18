@@ -36,7 +36,7 @@ export default function SignUpForm() {
       const data = await res.json();
       if (res.ok) {
         Cookies.set("auth_token", data.access_token, { expires: isChecked ? 7 : 1 });
-        router.push("/");
+        window.location.href = "/";
       } else {
         // Handle validation errors from Laravel
         if (data.errors) {
