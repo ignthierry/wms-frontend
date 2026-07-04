@@ -1,9 +1,11 @@
 "use client";
+import { motion } from "framer-motion";
+import Image from "next/image";
 import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
+import { EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import React, { useState } from "react";
 import Cookies from "js-cookie";
@@ -40,18 +42,30 @@ export default function SignInForm() {
 
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
-      <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
-        <Link
-          href="/"
-          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-        >
-          <ChevronLeftIcon />
-          Back to dashboard
-        </Link>
-      </div>
-      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
+
+      <motion.div 
+        className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto z-10 relative"
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
         <div>
-          <div className="mb-5 sm:mb-8">
+          <div className="mb-5 sm:mb-8 text-center">
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5, type: "spring", bounce: 0.5 }}
+              className="lg:hidden flex justify-center mb-6"
+            >
+              <Image
+                width={200}
+                height={40}
+                src="https://everwin-company-profile.vercel.app/_next/static/media/header_logo.50ada9d8.png"
+                alt="Everwin Logo"
+                className="object-contain dark:invert"
+                unoptimized
+              />
+            </motion.div>
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
               Sign In to WMS Logistics Portal
             </h1>
@@ -61,9 +75,13 @@ export default function SignInForm() {
           </div>
           <div>
             {error && (
-              <div className="mb-4 p-3 text-sm text-error-700 bg-error-50 rounded-lg">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mb-4 p-3 text-sm text-error-700 bg-error-50 rounded-lg"
+              >
                 {error}
-              </div>
+              </motion.div>
             )}
             <form onSubmit={handleLogin}>
               <div className="space-y-6">
@@ -136,7 +154,7 @@ export default function SignInForm() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

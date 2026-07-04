@@ -28,7 +28,7 @@ export default function AdminLayout({
       <Backdrop />
       {/* Main Content Area */}
       <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${mainContentMargin} pb-16 lg:pb-0`}
+        className={`flex-1 min-w-0 transition-all duration-300 ease-in-out ${mainContentMargin} pb-16 lg:pb-0`}
       >
         {/* Header */}
         <AppHeader />
