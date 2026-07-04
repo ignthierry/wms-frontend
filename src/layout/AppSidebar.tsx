@@ -17,16 +17,31 @@ import {
   TableIcon,
   UserCircleIcon,
 } from "../icons/index";
-import SidebarWidget from "./SidebarWidget";
+
+
+import { 
+  FileText, 
+  ArrowRightLeft, 
+  AlertTriangle, 
+  PackageSearch, 
+  RefreshCcw, 
+  ClipboardCheck, 
+  Send, 
+  CheckSquare, 
+  Truck,
+  Warehouse,
+  Users,
+  ShieldCheck,
+} from "lucide-react";
 
 type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  subItems?: { name: string; path: string; icon?: React.ReactNode; pro?: boolean; new?: boolean }[];
 };
 
-const navItems: NavItem[] = [
+const internalStaffItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
@@ -34,48 +49,52 @@ const navItems: NavItem[] = [
   },
   {
     icon: <BoxCubeIcon />,
-    name: "WMS Module",
+    name: "Inbound Management",
     subItems: [
-      { name: "Space Allocation", path: "/wms/space" },
-      { name: "Inbound / Outbound", path: "/wms/inbound-outbound" },
-      { name: "Stock Opname", path: "/wms/stock-opname" },
+      { name: "Pre-Advice / ASN List", path: "/inbound/asn", icon: <FileText className="w-4 h-4" /> },
+      { name: "Goods Receiving", path: "/inbound/receiving", icon: <ArrowRightLeft className="w-4 h-4" /> },
+      { name: "Inbound Deviation", path: "/inbound/deviation", icon: <AlertTriangle className="w-4 h-4" /> },
+    ],
+  },
+  {
+    icon: <TableIcon />,
+    name: "Inventory Management",
+    subItems: [
+      { name: "Stock Overview", path: "/inventory/stock", icon: <PackageSearch className="w-4 h-4" /> },
+      { name: "Stock Transfer", path: "/inventory/transfer", icon: <RefreshCcw className="w-4 h-4" /> },
+      { name: "Stock Opname", path: "/inventory/opname", icon: <ClipboardCheck className="w-4 h-4" /> },
     ],
   },
   {
     icon: <PageIcon />,
-    name: "PPJK & Forwarding",
+    name: "Outbound Management",
     subItems: [
-      { name: "Customs Documents", path: "/customs/documents" },
-      { name: "Container Tracking", path: "/customs/tracking" },
+      { name: "Delivery Request", path: "/outbound/request", icon: <Send className="w-4 h-4" /> },
+      { name: "Packing & Verification", path: "/outbound/packing", icon: <CheckSquare className="w-4 h-4" /> },
+      { name: "Dispatch & Shipping", path: "/outbound/dispatch", icon: <Truck className="w-4 h-4" /> },
     ],
   },
 ];
 
-const othersItems: NavItem[] = [
+const clientPortalItems: NavItem[] = [
+  { icon: <GridIcon />, name: "My Dashboard", path: "/client/dashboard" },
+  { icon: <PageIcon />, name: "Inbound Notice", path: "/client/inbound" },
+  { icon: <BoxCubeIcon />, name: "My Inventory", path: "/client/inventory" },
+  { icon: <ListIcon />, name: "Outbound Request", path: "/client/outbound" },
+];
+
+const superAdminItems: NavItem[] = [
   {
-    icon: <ListIcon />,
-    name: "EMKL & Transport",
+    icon: <GridIcon />,
+    name: "Master Data",
     subItems: [
-      { name: "Fleet Management", path: "/transport/fleet" },
-      { name: "Driver Dispatch", path: "/transport/dispatch" },
+      { name: "Gudang & Layout", path: "/admin/master/warehouse", icon: <Warehouse className="w-4 h-4" /> },
+      { name: "Klien / Customers", path: "/admin/master/clients", icon: <Users className="w-4 h-4" /> },
+      { name: "Pengguna / RBAC", path: "/admin/master/users", icon: <ShieldCheck className="w-4 h-4" /> },
     ],
   },
-  {
-    icon: <PieChartIcon />,
-    name: "Finance",
-    subItems: [
-      { name: "Quotation", path: "/finance/quotation" },
-      { name: "Billing & Invoice", path: "/finance/invoice" },
-    ],
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "Settings",
-    subItems: [
-      { name: "Users & Roles", path: "/settings/users" },
-      { name: "Profile", path: "/profile" },
-    ],
-  },
+  { icon: <PlugInIcon />, name: "Configurations", path: "/admin/configurations" },
+  { icon: <ListIcon />, name: "System Logs", path: "/admin/logs" },
 ];
 
 const AppSidebar: React.FC = () => {
@@ -84,7 +103,7 @@ const AppSidebar: React.FC = () => {
 
   const renderMenuItems = (
     navItems: NavItem[],
-    menuType: "main" | "others"
+    menuType: "internal" | "client" | "admin"
   ) => (
     <ul className="flex flex-col gap-4">
       {navItems.map((nav, index) => (
@@ -94,8 +113,8 @@ const AppSidebar: React.FC = () => {
               onClick={() => handleSubmenuToggle(index, menuType)}
               className={`menu-item group  ${
                 openSubmenu?.type === menuType && openSubmenu?.index === index
-                  ? "menu-item-active"
-                  : "menu-item-inactive"
+                  ? "bg-brand-500 text-white shadow-md"
+                  : "text-gray-700 hover:bg-brand-500 hover:text-white hover:shadow-md"
               } cursor-pointer ${
                 !isExpanded && !isHovered
                   ? "lg:justify-center"
@@ -103,7 +122,7 @@ const AppSidebar: React.FC = () => {
               }`}
             >
               <span
-                className={` ${
+                className={`transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 ${
                   openSubmenu?.type === menuType && openSubmenu?.index === index
                     ? "menu-item-icon-active"
                     : "menu-item-icon-inactive"
@@ -119,8 +138,8 @@ const AppSidebar: React.FC = () => {
                   className={`ml-auto w-5 h-5 transition-transform duration-200  ${
                     openSubmenu?.type === menuType &&
                     openSubmenu?.index === index
-                      ? "rotate-180 text-brand-500"
-                      : ""
+                      ? "rotate-180 text-white"
+                      : "text-gray-500 group-hover:text-white"
                   }`}
                 />
               )}
@@ -130,11 +149,11 @@ const AppSidebar: React.FC = () => {
               <Link
                 href={nav.path}
                 className={`menu-item group ${
-                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                  isActive(nav.path) ? "bg-brand-500 text-white shadow-md" : "text-gray-700 hover:bg-brand-500 hover:text-white hover:shadow-md"
                 }`}
               >
                 <span
-                  className={`${
+                  className={`transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5 ${
                     isActive(nav.path)
                       ? "menu-item-icon-active"
                       : "menu-item-icon-inactive"
@@ -166,37 +185,18 @@ const AppSidebar: React.FC = () => {
                   <li key={subItem.name}>
                     <Link
                       href={subItem.path}
-                      className={`menu-dropdown-item ${
+                      className={`menu-dropdown-item group flex items-center gap-2 ${
                         isActive(subItem.path)
-                          ? "menu-dropdown-item-active"
-                          : "menu-dropdown-item-inactive"
+                          ? "bg-brand-500 text-white shadow-sm"
+                          : "text-gray-600 hover:bg-brand-500 hover:text-white hover:shadow-sm"
                       }`}
                     >
+                      {subItem.icon && (
+                        <span className="transition-transform duration-300 group-hover:scale-125 group-hover:text-white">
+                          {subItem.icon}
+                        </span>
+                      )}
                       {subItem.name}
-                      <span className="flex items-center gap-1 ml-auto">
-                        {subItem.new && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge `}
-                          >
-                            new
-                          </span>
-                        )}
-                        {subItem.pro && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge `}
-                          >
-                            pro
-                          </span>
-                        )}
-                      </span>
                     </Link>
                   </li>
                 ))}
@@ -209,7 +209,7 @@ const AppSidebar: React.FC = () => {
   );
 
   const [openSubmenu, setOpenSubmenu] = useState<{
-    type: "main" | "others";
+    type: "internal" | "client" | "admin";
     index: number;
   } | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
@@ -223,14 +223,14 @@ const AppSidebar: React.FC = () => {
   useEffect(() => {
     // Check if the current path matches any submenu item
     let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
+    ["internal", "client", "admin"].forEach((menuType) => {
+      const items = menuType === "internal" ? internalStaffItems : menuType === "client" ? clientPortalItems : superAdminItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
               setOpenSubmenu({
-                type: menuType as "main" | "others",
+                type: menuType as "internal" | "client" | "admin",
                 index,
               });
               submenuMatched = true;
@@ -259,7 +259,7 @@ const AppSidebar: React.FC = () => {
     }
   }, [openSubmenu]);
 
-  const handleSubmenuToggle = (index: number, menuType: "main" | "others") => {
+  const handleSubmenuToggle = (index: number, menuType: "internal" | "client" | "admin") => {
     setOpenSubmenu((prevOpenSubmenu) => {
       if (
         prevOpenSubmenu &&
@@ -274,7 +274,7 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-gray-100 dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
         ${
           isExpanded || isMobileOpen
             ? "w-[290px]"
@@ -292,31 +292,17 @@ const AppSidebar: React.FC = () => {
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link href="/">
+        <Link href="/" className="flex items-center">
           {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <Image
-                className="dark:hidden"
-                src="/images/logo/logo.svg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-              <Image
-                className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-            </>
-          ) : (
-            <Image
-              src="/images/logo/logo-icon.svg"
-              alt="Logo"
-              width={32}
-              height={32}
+            <img 
+              src="https://everwin-company-profile.vercel.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fheader_logo.50ada9d8.png&w=640&q=75" 
+              alt="Everwin Logo" 
+              className="h-7 w-auto object-contain" 
             />
+          ) : (
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500">
+              <span className="text-white font-bold text-sm">EW</span>
+            </div>
           )}
         </Link>
       </div>
@@ -332,12 +318,12 @@ const AppSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
+                  "Internal Staff"
                 ) : (
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
+              {renderMenuItems(internalStaffItems, "internal")}
             </div>
 
             <div className="">
@@ -349,16 +335,33 @@ const AppSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
+                  "Client Portal"
                 ) : (
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(othersItems, "others")}
+              {renderMenuItems(clientPortalItems, "client")}
+            </div>
+
+            <div className="">
+              <h2
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                  !isExpanded && !isHovered
+                    ? "lg:justify-center"
+                    : "justify-start"
+                }`}
+              >
+                {isExpanded || isHovered || isMobileOpen ? (
+                  "Super Admin"
+                ) : (
+                  <HorizontaLDots />
+                )}
+              </h2>
+              {renderMenuItems(superAdminItems, "admin")}
             </div>
           </div>
         </nav>
-        {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null}
+
       </div>
     </aside>
   );

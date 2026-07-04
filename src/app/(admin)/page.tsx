@@ -1,41 +1,30 @@
 import type { Metadata } from "next";
-import { EcommerceMetrics } from "@/components/ecommerce/EcommerceMetrics";
 import React from "react";
-import MonthlyTarget from "@/components/ecommerce/MonthlyTarget";
-import MonthlySalesChart from "@/components/ecommerce/MonthlySalesChart";
-import StatisticsChart from "@/components/ecommerce/StatisticsChart";
-import RecentOrders from "@/components/ecommerce/RecentOrders";
-import DemographicCard from "@/components/ecommerce/DemographicCard";
+import WMSMetrics from "@/components/wms/WMSMetrics";
+import ActivityFeed from "@/components/wms/ActivityFeed";
+import CapacityChart from "@/components/wms/CapacityChart";
 
 export const metadata: Metadata = {
-  title:
-    "WMS Dashboard | WarehousePro Integrated Logistics",
+  title: "WMS Dashboard | WarehousePro Integrated Logistics",
   description: "Main dashboard for WMS Logistics Portal",
 };
 
 export default function LogisticsDashboard() {
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-6">
-      <div className="col-span-12 space-y-6 xl:col-span-7">
-        <EcommerceMetrics />
-
-        <MonthlySalesChart />
-      </div>
-
-      <div className="col-span-12 xl:col-span-5">
-        <MonthlyTarget />
-      </div>
-
+      {/* Top Metrics Cards */}
       <div className="col-span-12">
-        <StatisticsChart />
+        <WMSMetrics />
       </div>
 
-      <div className="col-span-12 xl:col-span-5">
-        <DemographicCard />
+      {/* Main Content Row */}
+      <div className="col-span-12 xl:col-span-8">
+        <ActivityFeed />
       </div>
 
-      <div className="col-span-12 xl:col-span-7">
-        <RecentOrders />
+      {/* Sidebar Content Row */}
+      <div className="col-span-12 xl:col-span-4">
+        <CapacityChart />
       </div>
     </div>
   );
