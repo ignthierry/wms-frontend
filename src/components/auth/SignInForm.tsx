@@ -6,6 +6,7 @@ import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import { EyeCloseIcon, EyeIcon } from "@/icons";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
 import Cookies from "js-cookie";
@@ -17,11 +18,13 @@ export default function SignInForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: "POST",
@@ -34,9 +37,11 @@ export default function SignInForm() {
         window.location.href = "/";
       } else {
         setError(data.message || "Login failed");
+        setIsLoading(false);
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
+      setIsLoading(false);
     }
   };
 
@@ -134,8 +139,15 @@ export default function SignInForm() {
                   </Link>
                 </div>
                 <div>
-                  <Button className="w-full" size="sm" type="submit">
-                    Sign in
+                  <Button className="w-full" size="sm" type="submit" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      "Sign in"
+                    )}
                   </Button>
                 </div>
               </div>
