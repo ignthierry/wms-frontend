@@ -94,7 +94,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
                   fill=""
                 />
               </svg>
-              Edit profile
+              Edit profil
             </DropdownItem>
           </li>
           <li>
@@ -119,7 +119,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
                   fill=""
                 />
               </svg>
-              Account settings
+              Pengaturan Akun
             </DropdownItem>
           </li>
           <li>
@@ -144,7 +144,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
                   fill=""
                 />
               </svg>
-              Support
+              Bantuan
             </DropdownItem>
           </li>
         </ul>
@@ -170,7 +170,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
               fill=""
             />
           </svg>
-          Sign out
+          Keluar
         </button>
       </Dropdown>
     </div>

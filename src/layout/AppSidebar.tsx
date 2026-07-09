@@ -47,39 +47,39 @@ type NavItem = {
 const internalStaffItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Dashboard",
+    name: "Dasbor",
     path: "/",
   },
   {
     icon: <BoxCubeIcon />,
-    name: "Inbound Management",
+    name: "Manajemen Barang Masuk",
     subItems: [
-      { name: "Pre-Advice / ASN List", path: "/inbound/asn", icon: <FileText className="w-4 h-4" /> },
-      { name: "Goods Receiving", path: "/inbound/receiving", icon: <ArrowRightLeft className="w-4 h-4" /> },
-      { name: "Inbound Deviation", path: "/inbound/deviation", icon: <AlertTriangle className="w-4 h-4" /> },
+      { name: "Daftar ASN / Manifest", path: "/inbound/asn", icon: <FileText className="w-4 h-4" /> },
+      { name: "Penerimaan Barang", path: "/inbound/receiving", icon: <ArrowRightLeft className="w-4 h-4" /> },
+      { name: "Deviasi Barang Masuk", path: "/inbound/deviation", icon: <AlertTriangle className="w-4 h-4" /> },
     ],
   },
   {
     icon: <TableIcon />,
-    name: "Inventory Management",
+    name: "Manajemen Inventori",
     subItems: [
-      { name: "Stock Overview", path: "/inventory/stock", icon: <PackageSearch className="w-4 h-4" /> },
-      { name: "Stock Transfer", path: "/inventory/transfer", icon: <RefreshCcw className="w-4 h-4" /> },
-      { name: "Stock Opname", path: "/inventory/opname", icon: <ClipboardCheck className="w-4 h-4" /> },
+      { name: "Ringkasan Stok", path: "/inventory/stock", icon: <PackageSearch className="w-4 h-4" /> },
+      { name: "Transfer Stok", path: "/inventory/transfer", icon: <RefreshCcw className="w-4 h-4" /> },
+      { name: "Stok Opname", path: "/inventory/opname", icon: <ClipboardCheck className="w-4 h-4" /> },
     ],
   },
   {
     icon: <PageIcon />,
-    name: "Outbound Management",
+    name: "Manajemen Barang Keluar",
     subItems: [
-      { name: "Delivery Request", path: "/outbound/request", icon: <Send className="w-4 h-4" /> },
-      { name: "Packing & Verification", path: "/outbound/packing", icon: <CheckSquare className="w-4 h-4" /> },
-      { name: "Dispatch & Shipping", path: "/outbound/dispatch", icon: <Truck className="w-4 h-4" /> },
+      { name: "Permintaan Pengiriman", path: "/outbound/request", icon: <Send className="w-4 h-4" /> },
+      { name: "Pengemasan & Verifikasi", path: "/outbound/packing", icon: <CheckSquare className="w-4 h-4" /> },
+      { name: "Pengiriman", path: "/outbound/dispatch", icon: <Truck className="w-4 h-4" /> },
     ],
   },
   {
     icon: <Receipt className="w-5 h-5" />,
-    name: "Invoice",
+    name: "Tagihan",
     path: "/invoice",
   },
   {
@@ -90,25 +90,26 @@ const internalStaffItems: NavItem[] = [
 ];
 
 const clientPortalItems: NavItem[] = [
-  { icon: <GridIcon />, name: "My Dashboard", path: "/client/dashboard" },
-  { icon: <PageIcon />, name: "Inbound Notice", path: "/client/inbound" },
-  { icon: <BoxCubeIcon />, name: "My Inventory", path: "/client/inventory" },
-  { icon: <ListIcon />, name: "Outbound Request", path: "/client/outbound" },
+  { icon: <GridIcon />, name: "Dasbor Saya", path: "/client/dashboard" },
+  { icon: <PageIcon />, name: "Rencana Barang Masuk", path: "/client/inbound" },
+  { icon: <BoxCubeIcon />, name: "Inventori Saya", path: "/client/inventory" },
+  { icon: <ListIcon />, name: "Permintaan Barang Keluar", path: "/client/outbound" },
 ];
 
 const superAdminItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Master Data",
+    name: "Data Master",
     subItems: [
-      { name: "Gudang & Layout", path: "/admin/master/warehouse", icon: <Warehouse className="w-4 h-4" /> },
-      { name: "Klien / Customers", path: "/admin/master/clients", icon: <Users className="w-4 h-4" /> },
-      { name: "Pengguna / RBAC", path: "/admin/master/users", icon: <ShieldCheck className="w-4 h-4" /> },
+      { name: "Gudang & Tata Letak", path: "/admin/master/warehouse", icon: <Warehouse className="w-4 h-4" /> },
+      { name: "Consignee", path: "/admin/master/consignee", icon: <Users className="w-4 h-4" /> },
+      { name: "Master EMKL", path: "/admin/master/emkl", icon: <ShieldCheck className="w-4 h-4" /> },
+      { name: "Master Pengguna", path: "/admin/master/users", icon: <UserCircleIcon className="w-4 h-4" /> },
       { name: "Master Tarif", path: "/admin/master/tarif", icon: <Banknote className="w-4 h-4" /> },
     ],
   },
-  { icon: <PlugInIcon />, name: "Configurations", path: "/admin/configurations" },
-  { icon: <ListIcon />, name: "System Logs", path: "/admin/logs" },
+  { icon: <PlugInIcon />, name: "Konfigurasi", path: "/admin/configurations" },
+  { icon: <ListIcon />, name: "Log Sistem", path: "/admin/logs" },
 ];
 
 const AppSidebar: React.FC = () => {
@@ -332,7 +333,7 @@ const AppSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Internal Staff"
+                  "Staf Internal"
                 ) : (
                   <HorizontaLDots />
                 )}
@@ -349,7 +350,7 @@ const AppSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Client Portal"
+                  "Portal Klien"
                 ) : (
                   <HorizontaLDots />
                 )}

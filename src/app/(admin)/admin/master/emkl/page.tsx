@@ -9,40 +9,41 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Modal } from "@/components/ui/modal";
+import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
 import { Pencil, Trash2 } from "lucide-react";
 
+interface Role {
+  id: number;
+  role_name: string;
+}
+
 interface User {
   id: number;
+  role_id: number;
+  username: string;
+  email: string;
   name: string;
-  email: string;
-}
-
-interface Client {
-  id: number;
-  user_id: number | null;
-  client_name: string;
-  company_name: string;
-  email: string;
   phone: string;
-  address: string;
-  user?: User;
+  is_active: boolean | number;
+  role?: Role;
 }
 
-export default function MasterClientsPage() {
-  const [clients, setClients] = useState<Client[]>([]);
+export default function MasterUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({
     id: 0,
-    user_id: "",
-    client_name: "",
-    company_name: "",
+    role_id: "",
+    username: "",
     email: "",
+    password: "",
+    name: "",
     phone: "",
-    address: "",
+    is_active: 1,
   });
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
@@ -50,27 +51,40 @@ export default function MasterClientsPage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [clientsRes, usersRes] = await Promise.all([
-        fetch(`${apiUrl}/clients`, {
+      // For now we might not have auth tokens set up fully, so we just attempt to fetch.
+      // If it fails with 401, you may need to implement a Bearer token retrieval.
+      const [usersRes, rolesRes] = await Promise.all([
+        fetch(`${apiUrl}/users`, {
           headers: {
             "Accept": "application/json",
           }
         }),
-        fetch(`${apiUrl}/users`, {
+        fetch(`${apiUrl}/roles`, {
           headers: {
             "Accept": "application/json",
           }
         })
       ]);
 
-      if (clientsRes.ok) {
-        const clientsData = await clientsRes.json();
-        setClients(clientsData.data || clientsData);
-      }
+      let allUsers: User[] = [];
+      let allRoles: Role[] = [];
 
       if (usersRes.ok) {
         const usersData = await usersRes.json();
-        setUsers(usersData.data || usersData);
+        allUsers = usersData.data || usersData;
+      }
+
+      if (rolesRes.ok) {
+        const rolesData = await rolesRes.json();
+        allRoles = rolesData.data || rolesData;
+        setRoles(allRoles);
+      }
+      
+      const clientRole = allRoles.find(r => r.role_name.toLowerCase() === 'client');
+      if (clientRole) {
+        setUsers(allUsers.filter(u => u.role_id === clientRole.id));
+      } else {
+        setUsers(allUsers); // fallback
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -83,28 +97,30 @@ export default function MasterClientsPage() {
     fetchData();
   }, []);
 
-  const handleOpenModal = (client?: Client) => {
-    if (client) {
+  const handleOpenModal = (user?: User) => {
+    if (user) {
       setIsEditMode(true);
       setFormData({
-        id: client.id,
-        user_id: client.user_id ? client.user_id.toString() : "",
-        client_name: client.client_name,
-        company_name: client.company_name,
-        email: client.email || "",
-        phone: client.phone || "",
-        address: client.address || "",
+        id: user.id,
+        role_id: user.role_id.toString(),
+        username: user.username,
+        email: user.email,
+        password: "", // Leave empty for edit
+        name: user.name,
+        phone: user.phone || "",
+        is_active: user.is_active ? 1 : 0,
       });
     } else {
       setIsEditMode(false);
       setFormData({
         id: 0,
-        user_id: "",
-        client_name: "",
-        company_name: "",
+        role_id: "",
+        username: "",
         email: "",
+        password: "",
+        name: "",
         phone: "",
-        address: "",
+        is_active: 1,
       });
     }
     setIsModalOpen(true);
@@ -114,21 +130,24 @@ export default function MasterClientsPage() {
     setIsModalOpen(false);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: name === "is_active" ? parseInt(value) : value,
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const url = isEditMode ? `${apiUrl}/clients/${formData.id}` : `${apiUrl}/clients`;
+      const url = isEditMode ? `${apiUrl}/users/${formData.id}` : `${apiUrl}/users`;
       const method = isEditMode ? "PUT" : "POST";
       
-      const payload = { ...formData, user_id: formData.user_id === "" ? null : parseInt(formData.user_id) };
+      const payload = { ...formData };
+      if (isEditMode && !payload.password) {
+        delete (payload as any).password;
+      }
 
       const res = await fetch(url, {
         method,
@@ -144,17 +163,17 @@ export default function MasterClientsPage() {
         fetchData();
       } else {
         const errorData = await res.json();
-        alert("Failed to save client: " + JSON.stringify(errorData));
+        alert("Failed to save user: " + JSON.stringify(errorData));
       }
     } catch (error) {
-      console.error("Error saving client:", error);
+      console.error("Error saving user:", error);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this client?")) return;
+    if (!confirm("Are you sure you want to delete this user?")) return;
     try {
-      const res = await fetch(`${apiUrl}/clients/${id}`, {
+      const res = await fetch(`${apiUrl}/users/${id}`, {
         method: "DELETE",
         headers: {
           "Accept": "application/json"
@@ -164,16 +183,16 @@ export default function MasterClientsPage() {
         fetchData();
       }
     } catch (error) {
-      console.error("Error deleting client:", error);
+      console.error("Error deleting user:", error);
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Master Clients</h1>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Master EMKL</h1>
         <Button onClick={() => handleOpenModal()} className="bg-brand-500 hover:bg-brand-600 text-white">
-          + Add Client
+          + Add EMKL
         </Button>
       </div>
 
@@ -184,10 +203,10 @@ export default function MasterClientsPage() {
               <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
                 <TableRow>
                   <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">ID</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Client Info</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Company</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Linked User</TableCell>
+                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">User Details</TableCell>
+                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Role</TableCell>
                   <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Phone</TableCell>
+                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Status</TableCell>
                   <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 text-right">Actions</TableCell>
                 </TableRow>
               </TableHeader>
@@ -196,31 +215,35 @@ export default function MasterClientsPage() {
                   <TableRow>
                     <TableCell className="px-5 py-4 text-center" colSpan={6}>Loading...</TableCell>
                   </TableRow>
-                ) : clients.length === 0 ? (
+                ) : users.length === 0 ? (
                   <TableRow>
-                    <TableCell className="px-5 py-4 text-center" colSpan={6}>No clients found.</TableCell>
+                    <TableCell className="px-5 py-4 text-center" colSpan={6}>No users found.</TableCell>
                   </TableRow>
                 ) : (
-                  clients.map((client) => (
-                    <TableRow key={client.id}>
-                      <TableCell className="px-5 py-4 text-theme-sm text-gray-500 dark:text-gray-400">{client.id}</TableCell>
+                  users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="px-5 py-4 text-theme-sm text-gray-500 dark:text-gray-400">{user.id}</TableCell>
                       <TableCell className="px-5 py-4 text-start">
                         <div>
-                          <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">{client.client_name}</span>
-                          <span className="block text-gray-500 text-theme-xs dark:text-gray-400">{client.email || "-"}</span>
+                          <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">{user.name}</span>
+                          <span className="block text-gray-500 text-theme-xs dark:text-gray-400">{user.email} | @{user.username}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="px-5 py-4 text-theme-sm text-gray-500 dark:text-gray-400">{client.company_name}</TableCell>
                       <TableCell className="px-5 py-4 text-theme-sm text-gray-500 dark:text-gray-400">
-                        {client.user?.name || users.find(u => u.id.toString() === client.user_id?.toString())?.name || "-"}
+                        {user.role?.role_name || roles.find(r => r.id === user.role_id)?.role_name || user.role_id}
                       </TableCell>
-                      <TableCell className="px-5 py-4 text-theme-sm text-gray-500 dark:text-gray-400">{client.phone || "-"}</TableCell>
+                      <TableCell className="px-5 py-4 text-theme-sm text-gray-500 dark:text-gray-400">{user.phone || "-"}</TableCell>
+                      <TableCell className="px-5 py-4 text-start">
+                        <Badge size="sm" color={user.is_active ? "success" : "error"}>
+                          {user.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="px-5 py-4 text-right">
                         <div className="flex justify-end gap-3">
-                          <button onClick={() => handleOpenModal(client)} className="text-gray-500 hover:text-brand-500 transition-colors" title="Edit">
+                          <button onClick={() => handleOpenModal(user)} className="text-gray-500 hover:text-brand-500 transition-colors" title="Edit">
                             <Pencil className="w-4.5 h-4.5" />
                           </button>
-                          <button onClick={() => handleDelete(client.id)} className="text-gray-500 hover:text-red-500 transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(user.id)} className="text-gray-500 hover:text-red-500 transition-colors" title="Delete">
                             <Trash2 className="w-4.5 h-4.5" />
                           </button>
                         </div>
@@ -236,27 +259,27 @@ export default function MasterClientsPage() {
 
       <Modal isOpen={isModalOpen} onClose={handleCloseModal} className="w-full max-w-xl p-6">
         <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-          {isEditMode ? "Edit Client" : "Add Client"}
+          {isEditMode ? "Edit EMKL" : "Add EMKL"}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client Name</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
               <input
                 type="text"
-                name="client_name"
-                value={formData.client_name}
+                name="name"
+                value={formData.name}
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company Name</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
               <input
                 type="text"
-                name="company_name"
-                value={formData.company_name}
+                name="username"
+                value={formData.username}
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -271,6 +294,7 @@ export default function MasterClientsPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
+                required
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
@@ -285,29 +309,45 @@ export default function MasterClientsPage() {
               />
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Linked User</label>
-            <select
-              name="user_id"
-              value={formData.user_id}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
+              <select
+              name="role_id"
+              value={formData.role_id}
               onChange={handleInputChange}
+              required
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
-              <option value="" className="dark:bg-gray-900">Select a user (optional)</option>
-              {users.map(u => (
-                <option key={u.id} value={u.id} className="dark:bg-gray-900">{u.name} ({u.email})</option>
+              <option value="" className="dark:bg-gray-900">Select a role</option>
+              {roles.filter(r => r.role_name.toLowerCase() === 'client').map(r => (
+                <option key={r.id} value={r.id} className="dark:bg-gray-900">{r.role_name}</option>
               ))}
             </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+              <select
+                name="is_active"
+                value={formData.is_active}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+              >
+                <option value={1} className="dark:bg-gray-900">Active</option>
+                <option value={0} className="dark:bg-gray-900">Inactive</option>
+              </select>
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address</label>
-            <textarea
-              name="address"
-              value={formData.address}
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password {isEditMode && <span className="text-gray-400 text-xs">(Leave empty to keep unchanged)</span>}</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
               onChange={handleInputChange}
-              rows={3}
+              required={!isEditMode}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
-            ></textarea>
+            />
           </div>
           <div className="flex justify-end gap-3 mt-6">
             <Button variant="outline" onClick={handleCloseModal} type="button">Cancel</Button>

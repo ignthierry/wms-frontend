@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import React from "react";
-import WMSMetrics from "@/components/wms/WMSMetrics";
-import ActivityFeed from "@/components/wms/ActivityFeed";
-import CapacityChart from "@/components/wms/CapacityChart";
+import LogisticsMetrics from "@/components/logistics/LogisticsMetrics";
+import DeliveryStatisticsChart from "@/components/logistics/DeliveryStatisticsChart";
+import RevenueAndShippedCard from "@/components/logistics/RevenueAndShippedCard";
+import DeliveryVehiclesCard from "@/components/logistics/DeliveryVehiclesCard";
+import TrackingDeliveryTimeline from "@/components/logistics/TrackingDeliveryTimeline";
+import DeliveryActivitiesTable from "@/components/logistics/DeliveryActivitiesTable";
 
 export const metadata: Metadata = {
   title: "WMS Dashboard | WarehousePro Integrated Logistics",
@@ -14,17 +17,23 @@ export default function LogisticsDashboard() {
     <div className="grid grid-cols-12 gap-4 md:gap-6">
       {/* Top Metrics Cards */}
       <div className="col-span-12">
-        <WMSMetrics />
+        <LogisticsMetrics />
       </div>
 
-      {/* Main Content Row */}
-      <div className="col-span-12 xl:col-span-8">
-        <ActivityFeed />
+      <div className="col-span-12 space-y-6 lg:col-span-8">
+        <DeliveryStatisticsChart />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <RevenueAndShippedCard />
+          <DeliveryVehiclesCard />
+        </div>
       </div>
 
-      {/* Sidebar Content Row */}
-      <div className="col-span-12 xl:col-span-4">
-        <CapacityChart />
+      <div className="col-span-12 lg:col-span-4">
+        <TrackingDeliveryTimeline />
+      </div>
+
+      <div className="col-span-12">
+        <DeliveryActivitiesTable />
       </div>
     </div>
   );
