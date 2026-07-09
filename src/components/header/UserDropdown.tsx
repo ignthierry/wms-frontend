@@ -1,21 +1,43 @@
 "use client";
 import { User } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 
 import Cookies from "js-cookie";
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-
-  // Mock session based on login
-  const session = {
+  const [session, setSession] = useState({
     user: {
-      name: "Admin Everwind",
-      email: "admin@everwind.com"
+      name: "Loading...",
+      email: ""
     }
-  };
+  });
+
+  useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setSession({
+          user: {
+            name: user.name || "User",
+            email: user.email || ""
+          }
+        });
+      } catch (e) {
+        console.error("Failed to parse user from localStorage", e);
+      }
+    } else {
+      setSession({
+        user: {
+          name: "Guest",
+          email: "guest@example.com"
+        }
+      });
+    }
+  }, []);
 
 function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
   e.stopPropagation();
@@ -151,6 +173,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
         <button
           onClick={() => {
             Cookies.remove("auth_token");
+            localStorage.removeItem("user");
             window.location.href = "/signin";
           }}
           className="flex items-center gap-3 w-full px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"

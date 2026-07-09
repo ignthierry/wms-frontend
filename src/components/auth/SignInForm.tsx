@@ -34,6 +34,9 @@ export default function SignInForm() {
       const data = await res.json();
       if (res.ok) {
         Cookies.set("auth_token", data.access_token, { expires: isChecked ? 7 : 1 });
+        if (data.user) {
+          localStorage.setItem("user", JSON.stringify(data.user));
+        }
         window.location.href = "/";
       } else {
         setError(data.message || "Login failed");

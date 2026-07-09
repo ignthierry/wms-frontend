@@ -16,6 +16,7 @@ interface User {
   id: number;
   name: string;
   email: string;
+  role_id?: number;
 }
 
 interface Client {
@@ -294,7 +295,7 @@ export default function MasterClientsPage() {
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="" className="dark:bg-gray-900">Select a user (optional)</option>
-              {users.map(u => (
+              {users.filter(u => u.role_id === 4).map(u => (
                 <option key={u.id} value={u.id} className="dark:bg-gray-900">{u.name} ({u.email})</option>
               ))}
             </select>
