@@ -32,6 +32,9 @@ import {
   Warehouse,
   Users,
   ShieldCheck,
+  Receipt,
+  LineChart,
+  Banknote,
 } from "lucide-react";
 
 type NavItem = {
@@ -74,6 +77,16 @@ const internalStaffItems: NavItem[] = [
       { name: "Dispatch & Shipping", path: "/outbound/dispatch", icon: <Truck className="w-4 h-4" /> },
     ],
   },
+  {
+    icon: <Receipt className="w-5 h-5" />,
+    name: "Invoice",
+    path: "/invoice",
+  },
+  {
+    icon: <LineChart className="w-5 h-5" />,
+    name: "Laporan",
+    path: "/laporan",
+  },
 ];
 
 const clientPortalItems: NavItem[] = [
@@ -91,6 +104,7 @@ const superAdminItems: NavItem[] = [
       { name: "Gudang & Layout", path: "/admin/master/warehouse", icon: <Warehouse className="w-4 h-4" /> },
       { name: "Klien / Customers", path: "/admin/master/clients", icon: <Users className="w-4 h-4" /> },
       { name: "Pengguna / RBAC", path: "/admin/master/users", icon: <ShieldCheck className="w-4 h-4" /> },
+      { name: "Master Tarif", path: "/admin/master/tarif", icon: <Banknote className="w-4 h-4" /> },
     ],
   },
   { icon: <PlugInIcon />, name: "Configurations", path: "/admin/configurations" },
