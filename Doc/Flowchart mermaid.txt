@@ -1,0 +1,35 @@
+---
+config:
+  theme: mc
+---
+flowchart TD
+
+    subgraph INBOUND ["PROSES INBOUND (BARANG MASUK)"]
+        C1("Customer Datang Bawa Manifest") --> A1
+        A1["Admin Input Header (Master BL, Container)"] --> A2
+        A2["Admin Input Detail POS (House BL, Qty, Vol)"] --> S1
+        S1{"Sistem Generate Barcode"} --> T1
+        T1("Tallyman Lakukan QC & Tempel Barcode") --> S2
+        S2[("Barang Masuk Stok Gudang")] --> T2
+        T2("Tallyman Simpan Barang & Update Lokasi Blok")
+    end
+
+    subgraph OUTBOUND ["PROSES OUTBOUND (BARANG KELUAR)"]
+        C2("Customer Datang Bawa Manifest/Ref") --> A3
+        A3["Admin Buka Menu Invoice & Pilih List Stok"] --> S3
+        S3{"Sistem Hitung Biaya: Storage & Handling"} --> A4
+        A4["Admin Cetak Surat Jalan"] --> T3
+        T3("Tallyman Ambil Barang Sesuai Surat Jalan") --> T4
+        T4("Barang Dikeluarkan (Outbound)")
+    end
+
+    subgraph EKSTERNAL ["APLIKASI EKSTERNAL (CUSTOMER)"]
+        E1("Monitoring Posisi Barang")
+        E2("Lihat Bukti Foto QC/Penyimpanan")
+        E3("Cek Rincian Biaya Storage & Handling")
+    end
+    T2 -.- S3
+    S2 -.-> E1
+    T2 -.-> E2
+    S3 -.-> E3
+    T2 -.-> A3

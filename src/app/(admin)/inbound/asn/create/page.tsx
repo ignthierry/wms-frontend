@@ -41,12 +41,18 @@ interface AsnItem {
   qty_expected: number;
   lot_number?: string;
   expiry_date?: string;
+  host_bl?: string;
+  consignee_id?: string;
+  packaging?: string;
+  item_condition?: string;
+  remarks?: string;
 }
 
 export default function CreateAsnPage() {
   const router = useRouter();
   const [emkls, setEmkls] = useState<User[]>([]);
-  const [consignees, setConsignees] = useState<Client[]>([]);
+  const [consignees, setConsignees] = useState<Client[]>([]); // This is actually Forwarding/Client
+  const [masterConsignees, setMasterConsignees] = useState<any[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   
   const [selectedEmkl, setSelectedEmkl] = useState<number | null>(null);
@@ -54,12 +60,13 @@ export default function CreateAsnPage() {
   const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState({
-    client_id: "", // Consignee ID
+    client_id: "", // Forwarding ID
     warehouse_id: "",
     asn_number: `ASN-${Date.now()}`,
     eta: "",
     driver_name: "",
     vehicle_plate: "",
+    trucking_company: "",
     status: "PENDING",
     no_master_bl: "",
     tgl: "",
@@ -80,11 +87,12 @@ export default function CreateAsnPage() {
   useEffect(() => {
     const fetchSelectData = async () => {
       try {
-        const [clientsRes, warehousesRes, usersRes, rolesRes] = await Promise.all([
+        const [clientsRes, warehousesRes, usersRes, rolesRes, masterConsigneesRes] = await Promise.all([
           fetch(`${apiUrl}/clients`, { headers: { "Accept": "application/json" } }),
           fetch(`${apiUrl}/warehouses`, { headers: { "Accept": "application/json" } }),
           fetch(`${apiUrl}/users`, { headers: { "Accept": "application/json" } }),
           fetch(`${apiUrl}/roles`, { headers: { "Accept": "application/json" } }),
+          fetch(`${apiUrl}/consignees`, { headers: { "Accept": "application/json" } }),
         ]);
 
         let allRoles: Role[] = [];
@@ -102,9 +110,17 @@ export default function CreateAsnPage() {
           }
         }
 
+        // We use Clients as Forwarding
         if (clientsRes.ok) {
           const clientsData = await clientsRes.json();
-          setConsignees(clientsData.data || clientsData);
+          // To not break existing state name, we still set it to 'consignees' state variable or create a new one
+          // Let's create a new state variable or just use the existing one but map correctly.
+          // I will use a separate state variable `masterConsignees` below.
+        }
+
+        if (masterConsigneesRes.ok) {
+            const mcData = await masterConsigneesRes.json();
+            setMasterConsignees(mcData.data || mcData);
         }
 
         if (warehousesRes.ok) {
@@ -141,7 +157,7 @@ export default function CreateAsnPage() {
         ...prev,
         asn_items: [
             ...prev.asn_items,
-            { item_code: "", item_name: "", qty_expected: 1, lot_number: "", expiry_date: "" }
+            { item_code: "", item_name: "", qty_expected: 1, lot_number: "", expiry_date: "", host_bl: "", consignee_id: "", packaging: "", item_condition: "", remarks: "" }
         ]
     }));
   };
@@ -247,12 +263,12 @@ export default function CreateAsnPage() {
                 </div>
 
                 <div>
-                  <Label>Consignee</Label>
+                  <Label>Forwarding (Client)</Label>
                   <div className="relative z-10">
                     <ReactSelect
-                      instanceId="consignee-select"
+                      instanceId="forwarding-select"
                       options={consigneeOptions}
-                      placeholder="Pilih Consignee..."
+                      placeholder="Pilih Forwarding..."
                       styles={customSelectStyles}
                       isDisabled={!selectedEmkl}
                       value={consigneeOptions.find(opt => opt.value === formData.client_id) || null}
@@ -261,6 +277,17 @@ export default function CreateAsnPage() {
                       }}
                     />
                   </div>
+                </div>
+
+                <div>
+                  <Label>Trucking Company</Label>
+                  <Input 
+                    type="text" 
+                    name="trucking_company"
+                    value={formData.trucking_company || ""}
+                    onChange={handleInputChange}
+                    placeholder="Nama Perusahaan Ekspedisi"
+                  />
                 </div>
 
                 <div>
@@ -443,18 +470,56 @@ export default function CreateAsnPage() {
                    <div className="space-y-4">
                        {formData.asn_items.map((item, index) => (
                            <div key={index} className="flex gap-4 items-start border p-4 rounded-xl border-gray-200 dark:border-gray-800">
-                               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 flex-1">
+                               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 flex-1">
                                    <div>
                                        <Label>Item Code</Label>
                                        <Input type="text" required value={item.item_code} onChange={(e) => handleItemChange(index, 'item_code', e.target.value)} />
                                    </div>
                                    <div>
-                                       <Label>Item Name</Label>
+                                       <Label>Item Name (Jenis Barang)</Label>
                                        <Input type="text" required value={item.item_name} onChange={(e) => handleItemChange(index, 'item_name', e.target.value)} />
                                    </div>
                                    <div>
-                                       <Label>Expected Qty</Label>
+                                       <Label>Host BL</Label>
+                                       <Input type="text" value={item.host_bl || ''} onChange={(e) => handleItemChange(index, 'host_bl', e.target.value)} />
+                                   </div>
+                                   <div>
+                                       <Label>Master Consignee</Label>
+                                       <select 
+                                          className="w-full h-11 rounded-lg border border-gray-200 px-4 py-2.5 text-theme-sm text-gray-800 bg-transparent dark:border-gray-800 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                                          value={item.consignee_id || ''}
+                                          onChange={(e) => handleItemChange(index, 'consignee_id', e.target.value)}
+                                       >
+                                          <option value="">Pilih Consignee...</option>
+                                          {masterConsignees.map(mc => (
+                                              <option key={mc.id} value={mc.id}>{mc.name}</option>
+                                          ))}
+                                       </select>
+                                   </div>
+                                   <div>
+                                       <Label>Expected Qty (Koli/Pcs)</Label>
                                        <Input type="number" required value={item.qty_expected} onChange={(e) => handleItemChange(index, 'qty_expected', parseInt(e.target.value) || 0)} />
+                                   </div>
+                                   <div>
+                                       <Label>Packaging (Kemasan)</Label>
+                                       <Input type="text" value={item.packaging || ''} onChange={(e) => handleItemChange(index, 'packaging', e.target.value)} />
+                                   </div>
+                                   <div>
+                                       <Label>Condition</Label>
+                                       <select 
+                                          className="w-full h-11 rounded-lg border border-gray-200 px-4 py-2.5 text-theme-sm text-gray-800 bg-transparent dark:border-gray-800 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                                          value={item.item_condition || ''}
+                                          onChange={(e) => handleItemChange(index, 'item_condition', e.target.value)}
+                                       >
+                                          <option value="">Select Condition</option>
+                                          <option value="NORMAL">Normal</option>
+                                          <option value="RUSAK">Rusak</option>
+                                          <option value="BASAH">Basah</option>
+                                       </select>
+                                   </div>
+                                   <div>
+                                       <Label>Remarks</Label>
+                                       <Input type="text" value={item.remarks || ''} onChange={(e) => handleItemChange(index, 'remarks', e.target.value)} />
                                    </div>
                                    <div>
                                        <Label>Lot Number</Label>
