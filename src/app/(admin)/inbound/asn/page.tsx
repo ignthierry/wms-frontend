@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Printer } from "lucide-react";
 
 interface Client {
   id: number;
@@ -165,6 +165,9 @@ export default function AsnPage() {
                       </TableCell>
                       <TableCell className="px-5 py-4 text-right">
                         <div className="flex justify-end gap-3">
+                          <Link href={`/inbound/asn/${asn.id}/print`} target="_blank" className="text-gray-500 hover:text-blue-500 transition-colors" title="Print QR">
+                            <Printer className="w-4.5 h-4.5" />
+                          </Link>
                           <Link href={`/inbound/asn/${asn.id}/edit`} className="text-gray-500 hover:text-brand-500 transition-colors" title="Edit">
                             <Pencil className="w-4.5 h-4.5" />
                           </Link>

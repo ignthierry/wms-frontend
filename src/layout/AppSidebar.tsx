@@ -55,8 +55,8 @@ const internalStaffItems: NavItem[] = [
     name: "Manajemen Barang Masuk",
     subItems: [
       { name: "Daftar ASN / Manifest", path: "/inbound/asn", icon: <FileText className="w-4 h-4" /> },
-      { name: "Penerimaan Barang", path: "/inbound/receiving", icon: <ArrowRightLeft className="w-4 h-4" /> },
-      { name: "Deviasi Barang Masuk", path: "/inbound/deviation", icon: <AlertTriangle className="w-4 h-4" /> },
+      { name: "Receiving & Tallying (LCL)", path: "/inbound/receiving", icon: <ArrowRightLeft className="w-4 h-4" /> },
+      { name: "Quality Control (QC)", path: "/inbound/qc", icon: <AlertTriangle className="w-4 h-4" /> },
     ],
   },
   {

@@ -61,6 +61,17 @@ export default function CreateAsnPage() {
     driver_name: "",
     vehicle_plate: "",
     status: "PENDING",
+    no_master_bl: "",
+    tgl: "",
+    tanggal_tiba: "",
+    tanggal_stripping: "",
+    tgl_in_container: "",
+    out_container: "",
+    no_segel: "",
+    voyage: "",
+    jumlah_pos: "",
+    no_container: "",
+    size: "",
     asn_items: [] as AsnItem[],
   });
 
@@ -308,6 +319,114 @@ export default function CreateAsnPage() {
               </div>
             </div>
           </ComponentCard>
+
+          <div className="mt-6">
+            <ComponentCard title="LCL Manifest Details">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <Label>No Master BL</Label>
+                    <Input 
+                      type="text" 
+                      name="no_master_bl"
+                      value={formData.no_master_bl}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <Label>Tanggal</Label>
+                    <Input 
+                      type="date" 
+                      name="tgl"
+                      value={formData.tgl}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <Label>Tanggal Tiba</Label>
+                    <Input 
+                      type="date" 
+                      name="tanggal_tiba"
+                      value={formData.tanggal_tiba}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <Label>Tanggal Stripping</Label>
+                    <Input 
+                      type="date" 
+                      name="tanggal_stripping"
+                      value={formData.tanggal_stripping}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <Label>Tanggal In Container</Label>
+                    <Input 
+                      type="date" 
+                      name="tgl_in_container"
+                      value={formData.tgl_in_container}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <Label>Tanggal Out Container</Label>
+                    <Input 
+                      type="date" 
+                      name="out_container"
+                      value={formData.out_container}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <Label>No Segel</Label>
+                    <Input 
+                      type="text" 
+                      name="no_segel"
+                      value={formData.no_segel}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <Label>Voyage</Label>
+                    <Input 
+                      type="text" 
+                      name="voyage"
+                      value={formData.voyage}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <Label>Jumlah Pos</Label>
+                    <Input 
+                      type="number" 
+                      name="jumlah_pos"
+                      value={formData.jumlah_pos}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <Label>No Container</Label>
+                    <Input 
+                      type="text" 
+                      name="no_container"
+                      value={formData.no_container}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <Label>Size (e.g. 20ft, 40ft)</Label>
+                    <Input 
+                      type="text" 
+                      name="size"
+                      value={formData.size}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+              </div>
+            </ComponentCard>
+          </div>
 
           <div className="mt-6">
             <ComponentCard title="ASN Items">
