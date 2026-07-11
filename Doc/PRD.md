@@ -1,51 +1,77 @@
-Product Requirement Document (PRD) – Integrated Logistics & WMS
-1. Project Overview
-Membangun platform logistik terintegrasi digital untuk mengelola operasional end-to-end: dari manajemen gudang (WMS), pengurusan dokumen kepabeanan (PPJK), manajemen armada domestik (EMKL/Transportasi), hingga pengiriman internasional (Freight Forwarding ekspor-impor).
-Tech Stack Architecture
-Backend: Laravel (sebagai Robust RESTful API / GraphQL, Queue Management untuk integrasi pihak ketiga, dan rekam log kontainer).
-Frontend: Next.js (Dashboard Admin, Portal Pelanggan, yang responsif, state management yang kuat, dan mendukung SSR/ISR untuk efisiensi).
-Database: MySQL / PostgreSQL (mendukung relasi data yang kompleks antara inventory, shipping, dan billing).
-2. User Personas & Roles
-Sistem akan diakses oleh beberapa peran dengan hak akses (RBAC) yang ketat:
-Super Admin / Management: Monitoring revenue, utilisasi gudang, dan performa operasional global.
-Warehouse Admin & Staff: Mengelola inbound, outbound, stock opname, dan space allocation di gudang.
-PPJK & Forwarding Specialist: Mengurus dokumen kepabeanan (PEB, PIB), billing pelayaran, dan booking kontainer.
-Dispatcher / Operational Land Transport: Mengatur penjadwalan armada truk (EMKL) dan pelacakan driver.
-Customer Portal Users: Eksportir/Importir yang memantau status barang, posisi kontainer, sisa kuota gudang, dan tagihan.
-3. Core Modules & Feature Requirements
-A. WMS Module (Persewaan & Manajemen Gudang)
-Mengelola aktivitas fisik barang di dalam gudang serta skema bisnis penyewaan (per m², per kubik, atau per palet).
-Space & Contract Management: Pencatatan kontrak sewa gudang pelanggan (durasi, tarif per m³ atau per palet).
-Inbound & Outbound Logistics: Proses receiving barang, put-away (penempatan rak), picking, dan packing.
-Stock Opname & Movement: Fitur penyesuaian stok berkala dan riwayat perpindahan antar-rak.
-Cross-Docking: Fasilitas pemindahan barang langsung dari inbound ke outbound tanpa masuk ke penyimpanan permanen.
-B. PPJK & Forwarding Module (Ekspor-Impor)
-Modul untuk menangani regulasi kepabeanan dan koordinasi logistik internasional.
-Customs Document Management: Upload dan validasi dokumen PIB (Pemberitahuan Impor Barang), PEB (Pemberitahuan Ekspor Barang), Bill of Lading (B/L), dan Packing List.
-Container Log History: Pelacakan tipe penanganan kontainer secara spesifik:
-FCL (Full Container Load): Tracking satu kontainer penuh dari shipper ke consignee.
-LCL (Less Container Load): Manajemen konsolidasi barang dari beberapa pelanggan ke dalam satu kontainer, termasuk proses stripping (bongkar) di gudang penimbunan.
-PLP (Pindah Lokasi Penimbunan): Pengurusan administrasi dan tracking perpindahan kontainer dari lini 1 pelabuhan ke gudang berikat/gudang sendiri.
-C. EMKL & Multimodal Transportation Module
-Mengelola armada darat (truk) dan integrasi manifes laut/udara.
-Fleet & Driver Management: Database truk (milik sendiri atau sub-kon), masa berlaku STNK/KEIR, dan manajemen driver.
-Order Delivery & Dispatching: Pembuatan Surat Jalan, penugasan driver, dan penentuan rute penjemputan kontainer dari depo/pelabuhan.
-Digital Proof of Delivery (e-POD): Sisi kurir/driver dapat mengunggah foto barang saat diterima/diserahkan melalui portal frontend yang dioptimalkan untuk mobile.
-D. Billing, Invoicing, & Quotation
-Multi-Component Quotation: Pembuatan penawaran harga otomatis yang mencakup komponen: biaya PPJK, sewa gudang, trucking, handling THC (Terminal Handling Charges), dan freight.
-Automated Invoicing: Sistem otomatis menerbitkan tagihan begitu status pekerjaan selesai (e.g., setelah status e-POD sukses atau nota dokumen jalur hijau keluar).
-4. Key API & Integration Points (Laravel Focus)
-Sebagai backend engine, API Laravel harus menyediakan:
-Integrasi Kepabeanan (Opsional Future Phase): Kesiapan struktur data untuk integrasi via API/Web Services dengan sistem INSW / CEISA Bea Cukai.
-Tracking Kontainer Pihak Ketiga: Integrasi dengan API pelayaran komersial untuk real-time container tracking berdasarkan nomor B/L atau nomor kontainer.
-Notification Engine: Integrasi WhatsApp API / Email OTP untuk notifikasi otomatis ke pelanggan saat kontainer masuk status PLP atau barang telah keluar gudang.
-5. Non-Functional Requirements & Security
-Audit Trail / Activity Log: Setiap perubahan status kontainer (misal: perubahan dari FCL ke proses stripping LCL) wajib mencatat timestamp dan ID operator.
-Data Isolation: Data antar-pelanggan di Customer Portal harus terisolasi secara ketat (Multi-tenancy secara logis di level query database).
-Performance: Endpoint pencarian log kontainer wajib dioptimalkan menggunakan indexing database pada kolom container_number, bl_number, dan job_order_id.
-6. Next Steps & Development Roadmap
-Phase 1: Database Schema Design & Core API (Fokus pada ERD relasi antara Job Order, Kontainer, Gudang, dan Dokumen PPJK).
-Phase 2: Backend WMS & EMKL Implementation (Pembuatan logika bisnis inbound/outbound dan manajemen armada di Laravel).
-Phase 3: Frontend Admin & Customer Portal (Pembangunan UI menggunakan Next.js dengan komponen tabel yang kaya fitur untuk memantau ratusan log kontainer sekaligus).
-Phase 4: Testing & Deployment (Uji coba integrasi alur kerja dari barang masuk pelabuhan hingga masuk ke gudang sewa).
+# Product Requirement Document (PRD) – Everwin WMS (LCL Operations)
 
+## 1. Project Overview
+Membangun sistem *Warehouse Management System* (WMS) yang dikhususkan untuk operasional **Less than Container Load (LCL)**. Sistem ini akan mendigitalisasi alur kerja dari penerimaan barang (Inbound), penempatan (Storage), hingga pengeluaran barang (Outbound), lengkap dengan perhitungan otomatis tagihan (*Automated Billing*) dan portal pelacakan eksternal bagi *Customer*.
+
+### Tech Stack Architecture
+- **Backend**: Laravel (RESTful API)
+- **Frontend**: Next.js (Dashboard Admin & External Tracking Portal)
+- **Database**: MySQL / PostgreSQL
+
+---
+
+## 2. Struktur Data Utama (Data Hierarchy)
+
+Alur operasional LCL berpusat pada relasi hierarkis berikut:
+
+1. **Master EMKL (Forwarding)**: Bertindak sebagai pengelola utama manifes.
+2. **Master Consignee**: Satu Forwarding dapat menaungi satu atau beberapa Consignee (pemilik barang sesungguhnya).
+3. **Manifest (Container Level / Header)**: 
+   - Atribut: *Master BL, No Container, Size Type, Voyage, Forwarding, Tanggal Stripping, Jumlah Pos, No Segel, Trucking, Nopol.*
+4. **Detail POS (Item Level)**:
+   - Atribut: *Host BL, Consignee, Jenis Barang, Jumlah, Kemasan/Satuan, Berat, Volume, Kondisi, Keterangan.*
+5. **Koli / Barang (Barcode Level)**: Barang fisik aktual yang dipecah dari Detail POS dan diberikan label *barcode* unik untuk *Quality Control* (QC) dan pelacakan.
+
+---
+
+## 3. Workflow & Fitur Inti (Core Features)
+
+### A. Proses Inbound (Barang Masuk)
+1. **Penerimaan Dokumen Manifes**: Customer datang membawa dokumen manifes ke Admin Gudang.
+2. **Data Entry (Admin)**: 
+   - Admin memasukkan data manifes (Header) dan data Pos (Detail).
+3. **Barcode Generation**: Setelah data Pos tersimpan, sistem secara otomatis menghasilkan *barcode* unik untuk setiap barang/koli.
+4. **Quality Control (Tallyman)**: 
+   - Tallyman mencetak *barcode*.
+   - Melakukan pengecekan fisik barang, mencocokkannya dengan dokumen manifes.
+   - Menempelkan *barcode* pada setiap koli barang.
+   - Mengambil foto sebagai bukti kondisi barang (*Photo Proof*).
+5. **Penempatan / Put-away (Tallyman)**: 
+   - Barang fisik dimasukkan ke stok gudang.
+   - Tallyman bebas menentukan lokasi blok (tanpa *auto-routing* dari sistem).
+   - Tallyman melakukan *scan barcode* dan memperbarui/mengisi data lokasi blok penyimpanan ke dalam sistem.
+
+### B. Proses Outbound (Barang Keluar) & Billing
+1. **Permintaan Pengeluaran**: Customer datang membawa referensi manifes.
+2. **Automated Billing (Admin)**: 
+   - Admin membuka menu *Invoice* dan memilih manifes yang akan dikeluarkan dari daftar stok (Inventory).
+   - Sistem akan **menghitung biaya otomatis** (Biaya *Storage* dan *Handling*) berdasarkan tarif per kapasitas (CBM/Tonase maksimal) dikalikan dengan lama waktu penyimpanan (hari).
+3. **Penerbitan Surat Jalan (Admin)**: Setelah *Invoice* terbit dan diselesaikan, Admin mencetak Surat Jalan / *Delivery Note*.
+4. **Pengambilan Barang (Tallyman)**: Tallyman mengambil barang fisik dari lokasi blok berdasarkan Surat Jalan.
+5. **Final Outbound**: Barang dikeluarkan dari gudang.
+
+### C. Portal Eksternal (Customer Tracking)
+Sebuah portal *web public* yang dioptimalkan untuk Forwarding dan Consignee:
+1. **Real-time Tracking**: Pelacakan menggunakan nomor *Master BL*, *Host BL*, atau *Nomor Kontainer*.
+2. **Position & Condition Monitoring**: 
+   - Customer dapat melihat secara langsung lokasi blok tempat barang disimpan.
+   - Customer dapat melihat bukti foto (QC / Penyimpanan).
+3. **Billing Transparency**: Pengecekan rincian estimasi atau realisasi biaya *Storage* dan *Handling*.
+
+---
+
+## 4. User Personas & Roles
+
+- **Admin Gudang**: Mengelola input dokumen manifes, menerbitkan *Invoice*, dan mencetak Surat Jalan.
+- **Tallyman (Checker)**: Eksekutor lapangan yang melakukan QC fisik, menempel *barcode*, menentukan lokasi penyimpanan, mengunggah foto, dan mengambil barang.
+- **Master EMKL (Forwarding)**: *Customer* tingkat atas yang membawa kontainer dan manifes konsolidasi ke gudang.
+- **Consignee**: Pemilik barang spesifik di dalam kontainer yang dapat melacak barangnya melalui portal publik.
+
+---
+
+## 5. Non-Functional Requirements & Aturan Khusus
+
+1. **Barcode System**: *Barcode* dicetak per koli fisik untuk memastikan tingkat ketelitian (*granularity*) maksimal saat QC dan *Put-away*.
+2. **Fleksibilitas Penempatan**: WMS *tidak* membatasi lokasi. Tallyman memiliki otoritas penuh menentukan blok letak barang secara aktual di lapangan dan cukup meng-update sistem.
+3. **Perhitungan Billing**: Harus mendukung logika penentuan tarif berdasarkan *nilai maksimal antara Berat (Tonase) atau Volume (CBM)*. 
+4. **Data Isolation (Portal Eksternal)**: Pencarian dengan *Host BL* hanya memunculkan data Consignee spesifik. Pencarian dengan *Master BL / Container* memunculkan ringkasan keseluruhan Forwarding.
