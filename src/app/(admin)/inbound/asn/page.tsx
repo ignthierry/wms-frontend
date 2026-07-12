@@ -13,10 +13,9 @@ import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
 import { Pencil, Trash2, Printer } from "lucide-react";
 
-interface Client {
+interface Forwarding {
   id: number;
-  client_code: string;
-  client_name: string;
+  forwarding_name: string;
 }
 
 interface Warehouse {
@@ -27,20 +26,19 @@ interface Warehouse {
 
 interface Asn {
   id: number;
-  client_id: number;
+  forwarding_id: number;
   warehouse_id: number;
   asn_number: string;
   eta: string;
-  driver_name: string;
   vehicle_plate: string;
   status: string;
-  client?: Client;
+  forwarding?: Forwarding;
   warehouse?: Warehouse;
 }
 
 export default function AsnPage() {
   const [asns, setAsns] = useState<Asn[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
+  const [forwardings, setForwardings] = useState<Forwarding[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -51,7 +49,7 @@ export default function AsnPage() {
     try {
       const [asnsRes, clientsRes, warehousesRes] = await Promise.all([
         fetch(`${apiUrl}/asns`, { headers: { "Accept": "application/json" } }),
-        fetch(`${apiUrl}/clients`, { headers: { "Accept": "application/json" } }),
+        fetch(`${apiUrl}/forwardings`, { headers: { "Accept": "application/json" } }),
         fetch(`${apiUrl}/warehouses`, { headers: { "Accept": "application/json" } }),
       ]);
 
@@ -61,8 +59,8 @@ export default function AsnPage() {
       }
 
       if (clientsRes.ok) {
-        const clientsData = await clientsRes.json();
-        setClients(clientsData.data || clientsData);
+        const forwardingsData = await clientsRes.json();
+        setForwardings(forwardingsData.data || forwardingsData);
       }
 
       if (warehousesRes.ok) {
@@ -124,7 +122,7 @@ export default function AsnPage() {
               <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
                 <TableRow>
                   <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">ASN Number</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Client</TableCell>
+                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Forwarding</TableCell>
                   <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Warehouse</TableCell>
                   <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">ETA</TableCell>
                   <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Vehicle</TableCell>
@@ -146,7 +144,7 @@ export default function AsnPage() {
                     <TableRow key={asn.id}>
                       <TableCell className="px-5 py-4 text-theme-sm font-medium text-gray-800 dark:text-white/90">{asn.asn_number}</TableCell>
                       <TableCell className="px-5 py-4 text-theme-sm text-gray-500 dark:text-gray-400">
-                        {asn.client?.client_name || clients.find(c => c.id === asn.client_id)?.client_name || asn.client_id}
+                        {asn.forwarding?.forwarding_name || forwardings.find(c => c.id === asn.forwarding_id)?.forwarding_name || asn.forwarding_id}
                       </TableCell>
                       <TableCell className="px-5 py-4 text-theme-sm text-gray-500 dark:text-gray-400">
                         {asn.warehouse?.warehouse_name || warehouses.find(w => w.id === asn.warehouse_id)?.warehouse_name || asn.warehouse_id}
@@ -155,8 +153,7 @@ export default function AsnPage() {
                         {new Date(asn.eta).toLocaleString()}
                       </TableCell>
                       <TableCell className="px-5 py-4 text-theme-sm text-gray-500 dark:text-gray-400">
-                        {asn.vehicle_plate || '-'} <br/>
-                        <span className="text-xs">{asn.driver_name || ''}</span>
+                        {asn.vehicle_plate || '-'}
                       </TableCell>
                       <TableCell className="px-5 py-4 text-start">
                         <Badge size="sm" color={getStatusColor(asn.status) as any}>

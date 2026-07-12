@@ -102,8 +102,8 @@ const superAdminItems: NavItem[] = [
     name: "Data Master",
     subItems: [
       { name: "Gudang & Tata Letak", path: "/admin/master/warehouse", icon: <Warehouse className="w-4 h-4" /> },
+      { name: "Master Forwarding", path: "/admin/master/forwarding", icon: <ShieldCheck className="w-4 h-4" /> },
       { name: "Consignee", path: "/admin/master/consignee", icon: <Users className="w-4 h-4" /> },
-      { name: "Master EMKL", path: "/admin/master/emkl", icon: <ShieldCheck className="w-4 h-4" /> },
       { name: "Master Pengguna", path: "/admin/master/users", icon: <UserCircleIcon className="w-4 h-4" /> },
       { name: "Master Tarif", path: "/admin/master/tarif", icon: <Banknote className="w-4 h-4" /> },
     ],

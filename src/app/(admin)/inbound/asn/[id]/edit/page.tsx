@@ -11,23 +11,9 @@ import Button from "@/components/ui/button/Button";
 import { Plus, X } from "lucide-react";
 import ReactSelect from "react-select";
 
-interface Role {
+interface Forwarding {
   id: number;
-  role_name: string;
-}
-
-interface User {
-  id: number;
-  role_id: number;
-  name: string;
-  email: string;
-}
-
-interface Client {
-  id: number;
-  user_id: number | null;
-  client_name: string;
-  company_name: string;
+  forwarding_name: string;
 }
 
 interface Warehouse {
@@ -39,8 +25,13 @@ interface AsnItem {
   item_code: string;
   item_name: string;
   qty_expected: number;
-  lot_number?: string;
+  pos_number?: string;
   expiry_date?: string;
+  host_bl?: string;
+  consignee_id?: string;
+  packaging?: string;
+  item_condition?: string;
+  remarks?: string;
 }
 
 export default function EditAsnPage() {
@@ -48,20 +39,19 @@ export default function EditAsnPage() {
   const params = useParams();
   const asnId = params?.id;
   
-  const [emkls, setEmkls] = useState<User[]>([]);
-  const [consignees, setConsignees] = useState<Client[]>([]);
+  const [forwardings, setForwardings] = useState<Forwarding[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [masterConsignees, setMasterConsignees] = useState<any[]>([]);
   
-  const [selectedEmkl, setSelectedEmkl] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(true);
   
   const [formData, setFormData] = useState({
-    client_id: "", // Consignee ID
+    forwarding_id: "", // Forwarding ID
     warehouse_id: "",
     asn_number: "",
     eta: "",
-    driver_name: "",
+
     vehicle_plate: "",
     status: "PENDING",
     no_master_bl: "",
@@ -85,34 +75,23 @@ export default function EditAsnPage() {
       if (!asnId) return;
       setIsFetchingData(true);
       try {
-        const [asnRes, clientsRes, warehousesRes, usersRes, rolesRes] = await Promise.all([
+        const [asnRes, forwardingsRes, warehousesRes, masterConsigneesRes] = await Promise.all([
           fetch(`${apiUrl}/asns/${asnId}`, { headers: { "Accept": "application/json" } }),
-          fetch(`${apiUrl}/clients`, { headers: { "Accept": "application/json" } }),
+          fetch(`${apiUrl}/forwardings`, { headers: { "Accept": "application/json" } }),
           fetch(`${apiUrl}/warehouses`, { headers: { "Accept": "application/json" } }),
-          fetch(`${apiUrl}/users`, { headers: { "Accept": "application/json" } }),
-          fetch(`${apiUrl}/roles`, { headers: { "Accept": "application/json" } }),
+          fetch(`${apiUrl}/consignees`, { headers: { "Accept": "application/json" } }),
         ]);
 
-        let allRoles: Role[] = [];
-        if (rolesRes.ok) {
-          const rolesData = await rolesRes.json();
-          allRoles = rolesData.data || rolesData;
+        let forwardingsList: Forwarding[] = [];
+        if (forwardingsRes.ok) {
+          const fwdData = await forwardingsRes.json();
+          forwardingsList = fwdData.data || fwdData;
+          setForwardings(forwardingsList);
         }
-
-        if (usersRes.ok) {
-          const usersData = await usersRes.json();
-          const allUsers: User[] = usersData.data || usersData;
-          const clientRole = allRoles.find(r => r.role_name.toLowerCase() === 'client');
-          if (clientRole) {
-            setEmkls(allUsers.filter(u => u.role_id === clientRole.id));
-          }
-        }
-
-        let clientsList: Client[] = [];
-        if (clientsRes.ok) {
-          const clientsData = await clientsRes.json();
-          clientsList = clientsData.data || clientsData;
-          setConsignees(clientsList);
+        
+        if (masterConsigneesRes.ok) {
+            const mcData = await masterConsigneesRes.json();
+            setMasterConsignees(mcData.data || mcData);
         }
 
         if (warehousesRes.ok) {
@@ -132,7 +111,7 @@ export default function EditAsnPage() {
           }
 
           setFormData({
-            client_id: asn.client_id?.toString() || "",
+            forwarding_id: asn.forwarding_id?.toString() || "",
             warehouse_id: asn.warehouse_id?.toString() || "",
             asn_number: asn.asn_number || "",
             eta: formattedEta,
@@ -152,14 +131,6 @@ export default function EditAsnPage() {
             size: asn.size || "",
             asn_items: asn.items || asn.asn_items || [],
           });
-
-          // Set the initial selected EMKL based on the consignee's user_id
-          if (asn.client_id) {
-              const clientObj = clientsList.find(c => c.id === asn.client_id);
-              if (clientObj && clientObj.user_id) {
-                  setSelectedEmkl(clientObj.user_id);
-              }
-          }
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -183,15 +154,35 @@ export default function EditAsnPage() {
       setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleAddItem = () => {
-    setFormData(prev => ({
-        ...prev,
-        asn_items: [
-            ...prev.asn_items,
-            { item_code: "", item_name: "", qty_expected: 1, lot_number: "", expiry_date: "" }
-        ]
-    }));
-  };
+  useEffect(() => {
+    // Only run if not fetching initial data, otherwise it might override fetched items before they settle?
+    // Actually, setting formData is atomic in fetchData. So this is fine.
+    const numPos = parseInt(formData.jumlah_pos) || 0;
+    setFormData(prev => {
+        const newItems = [...prev.asn_items];
+        
+        if (numPos > newItems.length) {
+            for (let i = newItems.length; i < numPos; i++) {
+                newItems.push({
+                    item_code: "", item_name: "", qty_expected: 1, pos_number: (i + 1).toString(), expiry_date: "", host_bl: "", consignee_id: "", packaging: "", item_condition: "", remarks: ""
+                });
+            }
+        } else if (numPos < newItems.length) {
+            newItems.splice(numPos);
+        }
+        
+        const updatedItems = newItems.map((item, idx) => ({ ...item, pos_number: (idx + 1).toString() }));
+        
+        const isSame = prev.asn_items.length === updatedItems.length && prev.asn_items.every((it, idx) => it.pos_number === updatedItems[idx].pos_number);
+        
+        if (!isSame) {
+            return { ...prev, asn_items: updatedItems };
+        }
+        return prev;
+    });
+  }, [formData.jumlah_pos]);
+
+
 
   const handleRemoveItem = (index: number) => {
     setFormData(prev => {
@@ -211,8 +202,8 @@ export default function EditAsnPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.client_id) {
-        alert("Please select a Consignee.");
+    if (!formData.forwarding_id) {
+        alert("Please select a Forwarding.");
         return;
     }
 
@@ -245,9 +236,7 @@ export default function EditAsnPage() {
     }
   };
 
-  const emklOptions = emkls.map(e => ({ value: e.id, label: `${e.name} (${e.email})` }));
-  const filteredConsignees = consignees.filter(c => selectedEmkl === null || c.user_id === selectedEmkl);
-  const consigneeOptions = filteredConsignees.map(c => ({ value: c.id.toString(), label: c.client_name }));
+  const forwardingOptions = forwardings.map(f => ({ value: f.id.toString(), label: f.forwarding_name }));
 
   const statusOptions = [
       { value: 'PENDING', label: 'PENDING' },
@@ -281,35 +270,17 @@ export default function EditAsnPage() {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label>Master EMKL</Label>
-                  <div className="relative z-20">
-                    <ReactSelect
-                      instanceId="emkl-select"
-                      options={emklOptions}
-                      placeholder="Pilih EMKL..."
-                      styles={customSelectStyles}
-                      isClearable
-                      value={emklOptions.find(opt => opt.value === selectedEmkl) || null}
-                      onChange={(option: any) => {
-                        setSelectedEmkl(option ? option.value : null);
-                        setFormData(prev => ({ ...prev, client_id: "" })); // Reset consignee
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Consignee</Label>
+                  <Label>Forwarding</Label>
                   <div className="relative z-10">
                     <ReactSelect
-                      instanceId="consignee-select"
-                      options={consigneeOptions}
-                      placeholder="Pilih Consignee..."
+                      instanceId="forwarding-select"
+                      options={forwardingOptions}
+                      placeholder="Pilih Forwarding..."
                       styles={customSelectStyles}
-                      isDisabled={!selectedEmkl}
-                      value={consigneeOptions.find(opt => opt.value === formData.client_id) || null}
+                      isClearable
+                      value={forwardingOptions.find(opt => opt.value === formData.forwarding_id) || null}
                       onChange={(option: any) => {
-                        setFormData(prev => ({ ...prev, client_id: option ? option.value : "" }));
+                        setFormData(prev => ({ ...prev, forwarding_id: option ? option.value : "" }));
                       }}
                     />
                   </div>
@@ -337,15 +308,7 @@ export default function EditAsnPage() {
                   />
                 </div>
 
-                <div>
-                  <Label>Driver Name</Label>
-                  <Input 
-                    type="text" 
-                    name="driver_name"
-                    value={formData.driver_name}
-                    onChange={handleInputChange}
-                  />
-                </div>
+
 
                 <div>
                   <Label>Vehicle Plate</Label>
@@ -387,27 +350,18 @@ export default function EditAsnPage() {
                     />
                   </div>
                   <div>
-                    <Label>Tanggal</Label>
+                    <Label>Tanggal Manifest</Label>
                     <Input 
-                      type="date" 
+                      type="datetime-local" 
                       name="tgl"
                       value={formData.tgl}
                       onChange={handleInputChange}
                     />
                   </div>
                   <div>
-                    <Label>Tanggal Tiba</Label>
-                    <Input 
-                      type="date" 
-                      name="tanggal_tiba"
-                      value={formData.tanggal_tiba}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div>
                     <Label>Tanggal Stripping</Label>
                     <Input 
-                      type="date" 
+                      type="datetime-local" 
                       name="tanggal_stripping"
                       value={formData.tanggal_stripping}
                       onChange={handleInputChange}
@@ -416,7 +370,7 @@ export default function EditAsnPage() {
                   <div>
                     <Label>Tanggal In Container</Label>
                     <Input 
-                      type="date" 
+                      type="datetime-local" 
                       name="tgl_in_container"
                       value={formData.tgl_in_container}
                       onChange={handleInputChange}
@@ -425,7 +379,7 @@ export default function EditAsnPage() {
                   <div>
                     <Label>Tanggal Out Container</Label>
                     <Input 
-                      type="date" 
+                      type="datetime-local" 
                       name="out_container"
                       value={formData.out_container}
                       onChange={handleInputChange}
@@ -468,13 +422,17 @@ export default function EditAsnPage() {
                     />
                   </div>
                   <div>
-                    <Label>Size (e.g. 20ft, 40ft)</Label>
-                    <Input 
-                      type="text" 
+                    <Label>Size Container</Label>
+                    <select 
                       name="size"
+                      className="w-full h-11 rounded-lg border border-gray-200 px-4 py-2.5 text-theme-sm text-gray-800 bg-transparent dark:border-gray-800 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                       value={formData.size}
                       onChange={handleInputChange}
-                    />
+                    >
+                      <option value="">Pilih Size</option>
+                      <option value="20ft">20ft</option>
+                      <option value="40ft">40ft</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -484,11 +442,6 @@ export default function EditAsnPage() {
           <div className="mt-6">
             <ComponentCard title="ASN Items">
               <div className="space-y-4">
-                <div className="flex justify-end">
-                  <Button type="button" onClick={handleAddItem} variant="outline" size="sm" className="flex items-center gap-1">
-                      <Plus className="w-4 h-4" /> Add Item
-                  </Button>
-                </div>
 
                 {formData.asn_items.length === 0 ? (
                    <div className="text-center py-4 text-sm text-gray-500">No items added. Please add items.</div>
@@ -496,22 +449,78 @@ export default function EditAsnPage() {
                    <div className="space-y-4">
                        {formData.asn_items.map((item, index) => (
                            <div key={index} className="flex gap-4 items-start border p-4 rounded-xl border-gray-200 dark:border-gray-800">
-                               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 flex-1">
+                               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 flex-1">
                                    <div>
                                        <Label>Item Code</Label>
                                        <Input type="text" required value={item.item_code} onChange={(e) => handleItemChange(index, 'item_code', e.target.value)} />
                                    </div>
                                    <div>
-                                       <Label>Item Name</Label>
+                                       <Label>Item Name (Jenis Barang)</Label>
                                        <Input type="text" required value={item.item_name} onChange={(e) => handleItemChange(index, 'item_name', e.target.value)} />
                                    </div>
                                    <div>
-                                       <Label>Expected Qty</Label>
+                                       <Label>Host BL</Label>
+                                       <Input type="text" value={item.host_bl || ''} onChange={(e) => handleItemChange(index, 'host_bl', e.target.value)} />
+                                   </div>
+                                   <div>
+                                       <Label>Master Consignee</Label>
+                                       <select 
+                                          className="w-full h-11 rounded-lg border border-gray-200 px-4 py-2.5 text-theme-sm text-gray-800 bg-transparent dark:border-gray-800 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                                          value={item.consignee_id || ''}
+                                          onChange={(e) => handleItemChange(index, 'consignee_id', e.target.value)}
+                                       >
+                                          <option value="">Pilih Consignee...</option>
+                                          {masterConsignees.map(mc => (
+                                              <option key={mc.id} value={mc.id}>{mc.name}</option>
+                                          ))}
+                                       </select>
+                                   </div>
+                                   <div>
+                                       <Label>Expected Qty (Koli/Pcs)</Label>
                                        <Input type="number" required value={item.qty_expected} onChange={(e) => handleItemChange(index, 'qty_expected', parseInt(e.target.value) || 0)} />
                                    </div>
                                    <div>
-                                       <Label>Lot Number</Label>
-                                       <Input type="text" value={item.lot_number || ''} onChange={(e) => handleItemChange(index, 'lot_number', e.target.value)} />
+                                       <Label>Packaging (Kemasan)</Label>
+                                       <select 
+                                          className="w-full h-11 rounded-lg border border-gray-200 px-4 py-2.5 text-theme-sm text-gray-800 bg-transparent dark:border-gray-800 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                                          value={item.packaging || ''}
+                                          onChange={(e) => handleItemChange(index, 'packaging', e.target.value)}
+                                       >
+                                          <option value="">Pilih Kemasan...</option>
+                                          <option value="BAG">Bag (BAG)</option>
+                                          <option value="BALE">Bale (BAL)</option>
+                                          <option value="BOX">Box (BOX)</option>
+                                          <option value="BUNDLE">Bundle (BDL)</option>
+                                          <option value="CARTON">Carton (CTN)</option>
+                                          <option value="CRATE">Crate (CRT)</option>
+                                          <option value="CYLINDER">Cylinder (CYL)</option>
+                                          <option value="DRUM">Drum (DRM)</option>
+                                          <option value="PACK">Pack (PCK)</option>
+                                          <option value="PALLET">Pallet (PLT)</option>
+                                          <option value="PIECES">Pieces (PCS)</option>
+                                          <option value="ROLL">Roll (ROL)</option>
+                                       </select>
+                                   </div>
+                                   <div>
+                                       <Label>Condition</Label>
+                                       <select 
+                                          className="w-full h-11 rounded-lg border border-gray-200 px-4 py-2.5 text-theme-sm text-gray-800 bg-transparent dark:border-gray-800 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                                          value={item.item_condition || ''}
+                                          onChange={(e) => handleItemChange(index, 'item_condition', e.target.value)}
+                                       >
+                                          <option value="">Select Condition</option>
+                                          <option value="NORMAL">Normal</option>
+                                          <option value="RUSAK">Rusak</option>
+                                          <option value="BASAH">Basah</option>
+                                       </select>
+                                   </div>
+                                   <div>
+                                       <Label>Remarks</Label>
+                                       <Input type="text" value={item.remarks || ''} onChange={(e) => handleItemChange(index, 'remarks', e.target.value)} />
+                                   </div>
+                                   <div>
+                                       <Label>Pos Number</Label>
+                                       <Input type="text" readOnly className="bg-gray-100 dark:bg-gray-800 cursor-not-allowed" value={item.pos_number || ''} />
                                    </div>
                                    <div>
                                        <Label>Expiry Date</Label>
