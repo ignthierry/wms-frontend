@@ -51,7 +51,7 @@ export default function EditAsnPage() {
     warehouse_id: "",
     asn_number: "",
     eta: "",
-
+    driver_name: "",
     vehicle_plate: "",
     status: "PENDING",
     no_master_bl: "",
