@@ -1,5 +1,5 @@
-import Swal from "sweetalert2";
 "use client";
+import Swal from "sweetalert2";
 
 import React, { useState, useEffect } from "react";
 import {
