@@ -83,20 +83,11 @@ const AppHeader: React.FC = () => {
             {/* Cross Icon */}
           </button>
 
-          <Link href="/" className="lg:hidden">
-            <Image
-              width={154}
-              height={32}
-              className="dark:hidden"
-              src="./images/logo/logo.svg"
-              alt="Logo"
-            />
-            <Image
-              width={154}
-              height={32}
-              className="hidden dark:block"
-              src="./images/logo/logo-dark.svg"
-              alt="Logo"
+          <Link href="/" className="lg:hidden flex items-center">
+            <img
+              src="https://everwin-company-profile.vercel.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fheader_logo.50ada9d8.png&w=640&q=75"
+              alt="Everwin Logo"
+              className="h-8 w-auto object-contain"
             />
           </Link>
 
