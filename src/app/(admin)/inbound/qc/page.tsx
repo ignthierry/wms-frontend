@@ -196,16 +196,7 @@ export default function MobileScannerPage() {
               </h2>
               <div className="relative w-full rounded-xl overflow-hidden bg-black border border-gray-300 dark:border-gray-700">
                   <div id="qr-reader" className="w-full [&>div]:border-none [&>video]:object-cover"></div>
-                  {/* Scanner Guide Overlay */}
-                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
-                      <div className="w-[250px] h-[250px] relative">
-                          {/* Scanning line animation */}
-                          <div className="absolute top-0 left-0 w-full h-1 bg-brand-500/80 shadow-[0_0_10px_rgba(59,130,246,1)] rounded-full" style={{ animation: 'scan 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
-                          <style dangerouslySetInnerHTML={{__html: `
-                            @keyframes scan {
-                                0%, 100% { transform: translateY(0); }
-                                50% { transform: translateY(246px); }
-                            }
+                  <style dangerouslySetInnerHTML={{__html: `
                             #qr-reader {
                                 background: white !important;
                             }
@@ -257,8 +248,6 @@ export default function MobileScannerPage() {
                                 outline: none;
                             }
                           `}} />
-                      </div>
-                  </div>
               </div>
               
               <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
