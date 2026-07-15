@@ -173,7 +173,7 @@ export default function ReceivingTallyingPage() {
       ) : (
         <div className="bg-white p-5 rounded-xl border border-gray-200 dark:bg-gray-900 dark:border-gray-800 shadow-sm flex justify-between items-center">
           <div>
-            <p className="text-sm text-gray-500">ASN Terpilih</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">ASN Terpilih</p>
             <h2 className="font-bold text-lg text-gray-800 dark:text-white">
               {asns.find(a => a.id.toString() === selectedAsnId)?.asn_number}
             </h2>
@@ -198,10 +198,10 @@ export default function ReceivingTallyingPage() {
                 <div className="flex justify-between items-start border-b border-gray-100 pb-3 dark:border-gray-700">
                   <div>
                     <h3 className="font-bold text-lg text-gray-800 dark:text-white">{item.item_name}</h3>
-                    <p className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded inline-block mt-1">{item.item_code}</p>
+                    <p className="text-xs font-mono text-gray-500 bg-gray-100 dark:bg-gray-800 dark:text-gray-300 px-2 py-1 rounded inline-block mt-1">{item.item_code}</p>
                   </div>
                   <div className="text-center">
-                    <span className="block text-xs text-gray-500">Qty (Colli)</span>
+                    <span className="block text-xs text-gray-500 dark:text-gray-400">Qty (Colli)</span>
                     <span className="font-bold text-xl text-brand-500">{item.qty_expected}</span>
                   </div>
                 </div>
@@ -215,7 +215,7 @@ export default function ReceivingTallyingPage() {
                       placeholder="0.00"
                       value={item.actual_weight || ""}
                       onChange={(e) => handleInputChange(item.id, "actual_weight", e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700"
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
                     />
                   </div>
                   <div>
@@ -226,7 +226,7 @@ export default function ReceivingTallyingPage() {
                       placeholder="0.000"
                       value={item.actual_volume || ""}
                       onChange={(e) => handleInputChange(item.id, "actual_volume", e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700"
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
                     />
                   </div>
                 </div>
