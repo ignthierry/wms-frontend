@@ -9,6 +9,7 @@ interface AsnItem {
   item_code: string;
   item_name: string;
   qty_expected: number;
+  packaging?: string;
 }
 
 export default function PrintAsnPage() {
@@ -128,6 +129,7 @@ export default function PrintAsnPage() {
                     <th className="border border-gray-300 px-3 py-2 text-left">Item Code</th>
                     <th className="border border-gray-300 px-3 py-2 text-left">Nama Barang</th>
                     <th className="border border-gray-300 px-3 py-2 text-center">Qty</th>
+                    <th className="border border-gray-300 px-3 py-2 text-center">Kemasan</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -136,6 +138,7 @@ export default function PrintAsnPage() {
                       <td className="border border-gray-300 px-3 py-2 font-mono">{item.item_code}</td>
                       <td className="border border-gray-300 px-3 py-2">{item.item_name}</td>
                       <td className="border border-gray-300 px-3 py-2 text-center font-bold">{item.qty_expected}</td>
+                      <td className="border border-gray-300 px-3 py-2 text-center">{item.packaging || "-"}</td>
                     </tr>
                   ))}
                 </tbody>

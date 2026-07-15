@@ -1,3 +1,4 @@
+import Swal from "sweetalert2";
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -112,7 +113,7 @@ export default function MasterWarehousePage() {
         setIsWHModalOpen(false);
         fetchWarehouses();
       } else {
-        alert("Failed to save warehouse");
+        Swal.fire("Failed to save warehouse");
       }
     } catch (e) {
       console.error(e);
@@ -160,7 +161,7 @@ export default function MasterWarehousePage() {
         fetchLocations();
       } else {
         const errorData = await res.json();
-        alert("Failed to save location: " + JSON.stringify(errorData));
+        Swal.fire("Failed to save location: " + JSON.stringify(errorData));
       }
     } catch (e) {
       console.error(e);

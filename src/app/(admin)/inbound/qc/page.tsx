@@ -1,75 +1,123 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Camera, Upload, AlertCircle, Save, X, RefreshCcw } from "lucide-react";
+import { Camera, AlertCircle, Save, X, RefreshCcw, Scan, MapPin, Package } from "lucide-react";
+import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
+import Swal from "sweetalert2";
 
-interface AsnItem {
-  id: number;
-  item_code: string;
-  item_name: string;
-  qty_expected: number;
-}
-
-interface Asn {
-  id: number;
-  asn_number: string;
-  items?: AsnItem[];
-}
-
-export default function QualityControlPage() {
-  const [asns, setAsns] = useState<Asn[]>([]);
-  const [selectedAsn, setSelectedAsn] = useState<string>("");
-  const [items, setItems] = useState<AsnItem[]>([]);
+export default function MobileScannerPage() {
+  const [manualQr, setManualQr] = useState("");
+  const [item, setItem] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  const [locations, setLocations] = useState<any[]>([]);
   
   // Form states
-  const [selectedItemCode, setSelectedItemCode] = useState<string>("");
-  const [qtyDiff, setQtyDiff] = useState<number>(0);
-  const [damageCondition, setDamageCondition] = useState<string>("");
+  const [blockLocation, setBlockLocation] = useState("");
+  const [itemCondition, setItemCondition] = useState("NORMAL");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   
-  const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
 
+  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const isProcessingRef = useRef(false);
+
   useEffect(() => {
-    fetchAsns();
+    // Fetch locations
+    fetch(`${apiUrl}/locations`, { headers: { "Accept": "application/json" } })
+      .then(res => res.json())
+      .then(data => {
+         const locs = data.data || data;
+         setLocations(locs);
+      })
+      .catch(err => console.error(err));
+
+    // Initialize scanner safely
+    if (!scannerRef.current) {
+        scannerRef.current = new Html5QrcodeScanner(
+            "qr-reader",
+            { 
+                fps: 10, 
+                qrbox: {width: 250, height: 250}, 
+                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA] 
+            },
+            false
+        );
+        
+        scannerRef.current.render(onScanSuccess, onScanFailure);
+    }
+    
+    return () => {
+        if (scannerRef.current) {
+            scannerRef.current.clear().catch(error => {
+                console.error("Failed to clear html5QrcodeScanner. ", error);
+            });
+        }
+    };
   }, []);
 
-  const fetchAsns = async () => {
-    try {
-      const res = await fetch(`${apiUrl}/asns`, { headers: { "Accept": "application/json" } });
-      if (res.ok) {
-        const data = await res.json();
-        setAsns(data.data || data);
+  const onScanSuccess = (decodedText: string, decodedResult: any) => {
+      if (!isProcessingRef.current) {
+          handleSearchQr(decodedText);
       }
-    } catch (error) {
-      console.error("Error fetching ASNs:", error);
-    }
   };
 
-  useEffect(() => {
-    if (selectedAsn) {
-      const asn = asns.find((a) => a.id.toString() === selectedAsn);
-      if (asn && asn.items && asn.items.length > 0) {
-        setItems(asn.items);
-      } else {
-        fetch(`${apiUrl}/asns/${selectedAsn}`, { headers: { "Accept": "application/json" } })
-          .then(res => res.json())
-          .then(data => {
-            const singleAsn = data.data || data;
-            setItems(singleAsn.items || []);
+  const onScanFailure = (error: any) => {
+      // Ignored to avoid spamming the console
+  };
+
+  const handleSearchQr = async (qrText: string) => {
+      if (!qrText || isProcessingRef.current) return;
+      isProcessingRef.current = true;
+      setIsLoading(true);
+      try {
+          const res = await fetch(`${apiUrl}/asn-items/qr/${encodeURIComponent(qrText)}`, {
+              headers: { "Accept": "application/json" }
           });
+          if (res.ok) {
+              const data = await res.json();
+              const foundItem = data.data || data;
+              setItem(foundItem);
+              setBlockLocation(foundItem.block_location || "");
+              setItemCondition(foundItem.item_condition || "NORMAL");
+              setManualQr(""); // clear manual input
+              if (scannerRef.current) {
+                  try { scannerRef.current.pause(true); } catch(e) {}
+              }
+              
+              Swal.fire({
+                  title: 'Berhasil!',
+                  text: 'Data barang ditemukan.',
+                  icon: 'success',
+                  timer: 1500,
+                  showConfirmButton: false
+              });
+          } else {
+              Swal.fire('Tidak Ditemukan', 'Item dengan QR code tersebut tidak ditemukan.', 'error');
+              setItem(null);
+              isProcessingRef.current = false;
+          }
+      } catch (err) {
+          console.error(err);
+          Swal.fire('Error', 'Terjadi kesalahan saat mencari item.', 'error');
+          isProcessingRef.current = false;
+      } finally {
+          setIsLoading(false);
       }
-    } else {
-      setItems([]);
-    }
-    setSelectedItemCode("");
-  }, [selectedAsn, asns, apiUrl]);
+  };
+
+  const handleManualSearch = (e: React.FormEvent) => {
+      e.preventDefault();
+      handleSearchQr(manualQr);
+  };
 
   const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setPhotoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPhotoPreview(reader.result as string);
@@ -80,6 +128,7 @@ export default function QualityControlPage() {
 
   const removePhoto = () => {
     setPhotoPreview(null);
+    setPhotoFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -87,171 +136,217 @@ export default function QualityControlPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedItemCode) {
-      alert("Pilih barang terlebih dahulu!");
-      return;
-    }
+    if (!item) return;
 
     setIsSaving(true);
     try {
-      // Create a dummy deviation record since we don't have a receiving ID handy here, 
-      // but the table requires receiving_id. For demo purposes, we will pass a fake receiving_id
-      // or we can just show a success message to demonstrate the UI works.
-      const payload = {
-        receiving_id: 1, // hardcoded for UI demo
-        item_code: selectedItemCode,
-        qty_diff: qtyDiff,
-        damage_condition: damageCondition,
-        photo_url: "uploaded_photo_" + Date.now() + ".jpg" // mock URL
-      };
+      const formData = new FormData();
+      formData.append('_method', 'PUT'); // for laravel spoofing
+      formData.append('block_location', blockLocation);
+      formData.append('item_condition', itemCondition);
+      
+      if (photoFile) {
+          formData.append('photo_proof_file', photoFile);
+      }
 
-      const res = await fetch(`${apiUrl}/deviations`, {
-        method: "POST",
+      const res = await fetch(`${apiUrl}/asn-items/${item.id}`, {
+        method: "POST", // POST with _method=PUT
         headers: {
           "Accept": "application/json",
-          "Content-Type": "application/json"
         },
-        body: JSON.stringify(payload)
+        body: formData
       });
 
       if (res.ok) {
-        alert("Laporan kerusakan berhasil disimpan!");
-        // Reset form
-        setSelectedItemCode("");
-        setQtyDiff(0);
-        setDamageCondition("");
+        Swal.fire('Berhasil', 'Status dan lokasi item berhasil diperbarui!', 'success');
+        setItem(null);
         removePhoto();
+        isProcessingRef.current = false;
+        if (scannerRef.current) {
+            try { scannerRef.current.resume(); } catch(e) {}
+        }
       } else {
-        alert("Gagal menyimpan laporan.");
+        Swal.fire('Gagal', 'Gagal memperbarui item.', 'error');
       }
     } catch (error) {
-      console.error("Error saving deviation:", error);
-      alert("Terjadi kesalahan jaringan.");
+      console.error("Error saving:", error);
+      Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="max-w-xl mx-auto space-y-6 pb-20">
-      <div className="flex flex-col gap-1 mb-4">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-          <AlertCircle className="text-red-500 w-6 h-6" />
-          Quality Control (QC)
-        </h1>
-        <p className="text-sm text-gray-500">Laporkan kerusakan barang saat penerimaan langsung dari lapangan.</p>
+    <div className="max-w-md mx-auto space-y-4 pb-20 bg-gray-50 dark:bg-[#0a0a0a] min-h-screen">
+      {/* Mobile Banner */}
+      <div className="bg-brand-600 text-white p-6 rounded-b-3xl shadow-lg">
+          <div className="flex items-center gap-3 mb-2">
+              <Scan className="w-8 h-8" />
+              <h1 className="text-2xl font-bold">WMS Scanner</h1>
+          </div>
+          <p className="text-brand-100 text-sm">Scan QR code pada label barang untuk update status, lokasi, dan foto.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden dark:bg-gray-900 dark:border-gray-800 flex flex-col">
-        
-        <div className="p-5 space-y-5 border-b border-gray-100 dark:border-gray-800">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Pilih ASN / Manifest</label>
-            <select 
-              className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 dark:bg-gray-800 dark:border-gray-700 focus:ring-2 focus:ring-brand-500"
-              value={selectedAsn}
-              onChange={(e) => setSelectedAsn(e.target.value)}
-              required
-            >
-              <option value="">-- Pilih ASN --</option>
-              {asns.map(asn => (
-                <option key={asn.id} value={asn.id}>{asn.asn_number}</option>
-              ))}
-            </select>
-          </div>
-
-          {items.length > 0 && (
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Pilih Barang (Item)</label>
-              <select 
-                className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 dark:bg-gray-800 dark:border-gray-700 focus:ring-2 focus:ring-brand-500"
-                value={selectedItemCode}
-                onChange={(e) => setSelectedItemCode(e.target.value)}
-                required
-              >
-                <option value="">-- Pilih Barang --</option>
-                {items.map(item => (
-                  <option key={item.id} value={item.item_code}>{item.item_name} ({item.item_code})</option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
-
-        <div className="p-5 space-y-5">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Selisih Qty (Rusak/Kurang)</label>
-               <input 
-                  type="number"
-                  required
-                  value={qtyDiff}
-                  onChange={(e) => setQtyDiff(Number(e.target.value))}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700"
-                  placeholder="Misal: 2"
-               />
-            </div>
-          </div>
-
-          <div>
-             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Deskripsi Kerusakan</label>
-             <textarea 
-                required
-                rows={3}
-                value={damageCondition}
-                onChange={(e) => setDamageCondition(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700 resize-none"
-                placeholder="Contoh: Kardus penyok dan basah..."
-             ></textarea>
-          </div>
-
-          <div>
-             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Foto Kondisi Barang</label>
-             
-             {!photoPreview ? (
-               <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 dark:border-gray-700 transition-colors">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6 text-brand-500">
-                     <Camera className="w-10 h-10 mb-3" />
-                     <p className="mb-1 text-sm font-semibold">Ambil Foto / Upload</p>
-                     <p className="text-xs text-gray-500">Gunakan kamera HP Anda</p>
+      <div className="px-4 space-y-4">
+          
+          {/* Scanner Card */}
+          <div className={`bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden p-4 ${item ? 'hidden' : 'block'}`}>
+              <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                  <Camera className="w-4 h-4 text-brand-500" /> Arahkan Kamera ke QR Code
+              </h2>
+              <div className="relative w-full rounded-xl overflow-hidden bg-black border border-gray-300 dark:border-gray-700">
+                  <div id="qr-reader" className="w-full [&>div]:border-none [&>video]:object-cover"></div>
+                  {/* Scanner Guide Overlay */}
+                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
+                      <div className="w-56 h-56 relative animate-pulse-slow">
+                          {/* Top Left */}
+                          <div className="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-brand-500 rounded-tl-lg"></div>
+                          {/* Top Right */}
+                          <div className="absolute top-0 right-0 w-10 h-10 border-t-4 border-r-4 border-brand-500 rounded-tr-lg"></div>
+                          {/* Bottom Left */}
+                          <div className="absolute bottom-0 left-0 w-10 h-10 border-b-4 border-l-4 border-brand-500 rounded-bl-lg"></div>
+                          {/* Bottom Right */}
+                          <div className="absolute bottom-0 right-0 w-10 h-10 border-b-4 border-r-4 border-brand-500 rounded-br-lg"></div>
+                          
+                          {/* Scanning line animation */}
+                          <div className="absolute top-0 left-0 w-full h-1 bg-brand-500/80 shadow-[0_0_10px_rgba(59,130,246,1)] rounded-full" style={{ animation: 'scan 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
+                          <style dangerouslySetInnerHTML={{__html: `
+                            @keyframes scan {
+                                0%, 100% { transform: translateY(0); }
+                                50% { transform: translateY(14rem); }
+                            }
+                          `}} />
+                      </div>
                   </div>
-                  {/* The 'capture' attribute is mobile-first, opens the camera directly on iOS/Android */}
-                  <input 
-                    type="file" 
-                    className="hidden" 
-                    accept="image/*" 
-                    capture="environment"
-                    ref={fileInputRef}
-                    onChange={handlePhotoCapture}
-                  />
-               </label>
-             ) : (
-               <div className="relative w-full rounded-2xl overflow-hidden border border-gray-200">
-                  <img src={photoPreview} alt="Preview" className="w-full h-48 object-cover" />
-                  <button 
-                    type="button"
-                    onClick={removePhoto}
-                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-transform hover:scale-110"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-               </div>
-             )}
+              </div>
+              
+              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <form onSubmit={handleManualSearch} className="flex gap-2">
+                      <input 
+                          type="text" 
+                          value={manualQr}
+                          onChange={(e) => setManualQr(e.target.value)}
+                          placeholder="Atau ketik ID Manual..."
+                          className="flex-1 p-3 border border-gray-300 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 text-sm focus:ring-2 focus:ring-brand-500"
+                      />
+                      <button 
+                          type="submit" 
+                          disabled={isLoading || !manualQr}
+                          className="px-4 py-3 bg-gray-800 text-white rounded-xl text-sm font-semibold disabled:opacity-50"
+                      >
+                          Cari
+                      </button>
+                  </form>
+              </div>
           </div>
-        </div>
 
-        <div className="p-5 bg-gray-50 border-t border-gray-100 dark:bg-gray-800/50 dark:border-gray-800 mt-auto">
-          <button 
-            type="submit"
-            disabled={isSaving}
-            className="w-full py-4 bg-brand-500 text-white font-bold rounded-xl shadow-lg hover:bg-brand-600 transition-colors flex justify-center items-center gap-2 disabled:opacity-70 text-lg"
-          >
-            {isSaving ? <RefreshCcw className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-            {isSaving ? "Menyimpan..." : "Kirim Laporan QC"}
-          </button>
-        </div>
+          {/* Result Card */}
+          {item && (
+              <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-4">
+                  <div className="bg-gray-800 text-white p-4 flex justify-between items-start">
+                      <div>
+                          <h3 className="font-bold flex items-center gap-2">
+                              <Package className="w-5 h-5 text-brand-400" /> {item.item_code}
+                          </h3>
+                          <p className="text-sm text-gray-300 mt-1">{item.item_name}</p>
+                          <p className="text-xs text-brand-300 mt-1">ASN: {item.asn?.asn_number || '-'}</p>
+                      </div>
+                      <button 
+                          type="button" 
+                          onClick={() => {
+                              setItem(null);
+                              isProcessingRef.current = false;
+                              if (scannerRef.current) {
+                                  try { scannerRef.current.resume(); } catch(e) {}
+                              }
+                          }} 
+                          className="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-xs font-semibold"
+                      >
+                          Tutup
+                      </button>
+                  </div>
+                  
+                  <div className="p-4 space-y-4">
+                      <div>
+                          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                              <MapPin className="w-4 h-4 text-brand-500" /> Lokasi (Block / Rak)
+                          </label>
+                          <select 
+                              className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 focus:ring-2 focus:ring-brand-500"
+                              value={blockLocation}
+                              onChange={(e) => setBlockLocation(e.target.value)}
+                          >
+                              <option value="">-- Pilih Lokasi --</option>
+                              {locations.map(loc => (
+                                  <option key={loc.id} value={loc.barcode_loc}>
+                                      {loc.barcode_loc} {loc.warehouse?.warehouse_name ? `(${loc.warehouse.warehouse_name})` : ''}
+                                  </option>
+                              ))}
+                          </select>
+                      </div>
 
-      </form>
+                      <div>
+                          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                              <AlertCircle className="w-4 h-4 text-brand-500" /> Kondisi Barang
+                          </label>
+                          <select 
+                              className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 focus:ring-2 focus:ring-brand-500"
+                              value={itemCondition}
+                              onChange={(e) => setItemCondition(e.target.value)}
+                          >
+                              <option value="NORMAL">Normal</option>
+                              <option value="RUSAK">Rusak</option>
+                              <option value="BASAH">Basah</option>
+                              <option value="QUARANTINE">Karantina</option>
+                          </select>
+                      </div>
+
+                      <div>
+                          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Foto Aktual</label>
+                          {!photoPreview ? (
+                            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 transition-colors">
+                                <div className="flex flex-col items-center justify-center pt-5 pb-6 text-brand-500">
+                                  <Camera className="w-8 h-8 mb-2" />
+                                  <p className="text-xs font-semibold">Ambil Foto / Upload</p>
+                                </div>
+                                <input 
+                                  type="file" 
+                                  className="hidden" 
+                                  accept="image/*" 
+                                  capture="environment"
+                                  ref={fileInputRef}
+                                  onChange={handlePhotoCapture}
+                                />
+                            </label>
+                          ) : (
+                            <div className="relative w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                                <img src={photoPreview} alt="Preview" className="w-full h-40 object-cover" />
+                                <button 
+                                  type="button"
+                                  onClick={removePhoto}
+                                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-transform hover:scale-110"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                          )}
+                      </div>
+                  </div>
+
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
+                      <button 
+                          type="submit"
+                          disabled={isSaving}
+                          className="w-full py-4 bg-brand-500 text-white font-bold rounded-xl shadow-lg hover:bg-brand-600 transition-colors flex justify-center items-center gap-2 disabled:opacity-70"
+                      >
+                          {isSaving ? <RefreshCcw className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                          {isSaving ? "Menyimpan..." : "Simpan Pembaruan"}
+                      </button>
+                  </div>
+              </form>
+          )}
+
+      </div>
     </div>
   );
 }

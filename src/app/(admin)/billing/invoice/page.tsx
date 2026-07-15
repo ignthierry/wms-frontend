@@ -1,3 +1,4 @@
+import Swal from "sweetalert2";
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -41,7 +42,7 @@ export default function InvoicePage() {
         const data = await res.json();
         setCalculation(data);
       } else {
-        alert("Failed to calculate. Make sure the ASN ID is correct.");
+        Swal.fire("Failed to calculate. Make sure the ASN ID is correct.");
       }
     } catch (error) {
       console.error(error);
@@ -56,7 +57,7 @@ export default function InvoicePage() {
         headers: { "Accept": "application/json" }
       });
       if (res.ok) {
-        alert("Invoice Generated Successfully!");
+        Swal.fire("Invoice Generated Successfully!");
         setCalculation(null);
         setAsnNumber("");
         fetchInvoices();

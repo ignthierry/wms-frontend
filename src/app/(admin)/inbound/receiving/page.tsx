@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Printer, Save, CheckCircle2 } from "lucide-react";
+import { Printer, QrCode, Save, CheckCircle2 } from "lucide-react";
+import Swal from "sweetalert2";
 
 interface AsnItem {
   id: number;
@@ -27,6 +28,7 @@ export default function ReceivingTallyingPage() {
   const [items, setItems] = useState<AsnItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [savingId, setSavingId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("PENDING");
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
 
@@ -91,13 +93,35 @@ export default function ReceivingTallyingPage() {
         })
       });
       if (res.ok) {
-        alert("Data pengukuran berhasil disimpan!");
+        // Automatically change ASN status to RECEIVING if currently PENDING
+        const currentAsn = asns.find(a => a.id.toString() === selectedAsnId);
+        if (currentAsn && currentAsn.status === 'PENDING') {
+           try {
+             await fetch(`${apiUrl}/asns/${selectedAsnId}`, {
+               method: "PUT",
+               headers: { "Accept": "application/json", "Content-Type": "application/json" },
+               body: JSON.stringify({ status: "RECEIVING" })
+             });
+             // Update local state
+             setAsns(prev => prev.map(a => a.id.toString() === selectedAsnId ? { ...a, status: "RECEIVING" } : a));
+           } catch (e) {
+             console.error("Failed to update ASN status:", e);
+           }
+        }
+
+        Swal.fire({
+          title: 'Berhasil!',
+          text: 'Data pengukuran berhasil disimpan!',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
       } else {
-        alert("Gagal menyimpan data.");
+        Swal.fire('Gagal', 'Gagal menyimpan data.', 'error');
       }
     } catch (error) {
-      console.error("Error saving item:", error);
-      alert("Terjadi kesalahan jaringan.");
+      console.error(error);
+      Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
     } finally {
       setSavingId(null);
     }
@@ -110,19 +134,58 @@ export default function ReceivingTallyingPage() {
         <p className="text-sm text-gray-500">Pilih ASN dan catat hasil ukur ulang (Weight/CBM) serta cetak label per koli.</p>
       </div>
 
-      <div className="bg-white p-5 rounded-xl border border-gray-200 dark:bg-gray-900 dark:border-gray-800 shadow-sm">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Pilih ASN / Manifest</label>
-        <select 
-          className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 focus:ring-2 focus:ring-brand-500"
-          value={selectedAsnId}
-          onChange={(e) => setSelectedAsnId(e.target.value)}
-        >
-          <option value="">-- Pilih ASN --</option>
-          {asns.map(asn => (
-            <option key={asn.id} value={asn.id}>{asn.asn_number} - {asn.status}</option>
-          ))}
-        </select>
-      </div>
+      {!selectedAsnId ? (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Pilih ASN / Manifest</h2>
+            <div className="flex bg-gray-100 p-1 rounded-lg dark:bg-gray-800">
+              <button onClick={() => setStatusFilter("ALL")} className={`px-4 py-2 text-sm font-semibold rounded-md ${statusFilter === "ALL" ? "bg-white shadow-sm dark:bg-gray-700" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}>Semua</button>
+              <button onClick={() => setStatusFilter("PENDING")} className={`px-4 py-2 text-sm font-semibold rounded-md ${statusFilter === "PENDING" ? "bg-white shadow-sm dark:bg-gray-700 text-yellow-600" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}>Pending</button>
+              <button onClick={() => setStatusFilter("RECEIVING")} className={`px-4 py-2 text-sm font-semibold rounded-md ${statusFilter === "RECEIVING" ? "bg-white shadow-sm dark:bg-gray-700 text-green-600" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}>Receiving</button>
+            </div>
+          </div>
+          {asns.filter(a => statusFilter === "ALL" || a.status === statusFilter).length === 0 ? (
+            <p className="text-sm text-gray-500 bg-white p-6 rounded-xl border border-gray-200 dark:bg-gray-900 dark:border-gray-800 text-center">
+              Tidak ada data ASN dengan status {statusFilter}.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {asns.filter(a => statusFilter === "ALL" || a.status === statusFilter).map(asn => (
+                <div 
+                  key={asn.id} 
+                  onClick={() => setSelectedAsnId(asn.id.toString())}
+                  className="bg-white p-5 rounded-xl border border-gray-200 dark:bg-gray-900 dark:border-gray-800 shadow-sm cursor-pointer hover:border-brand-500 hover:shadow-md transition-all"
+                >
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-bold text-lg text-gray-800 dark:text-white">{asn.asn_number}</h3>
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                      asn.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
+                    }`}>
+                      {asn.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-2">Klik untuk memproses penerimaan</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="bg-white p-5 rounded-xl border border-gray-200 dark:bg-gray-900 dark:border-gray-800 shadow-sm flex justify-between items-center">
+          <div>
+            <p className="text-sm text-gray-500">ASN Terpilih</p>
+            <h2 className="font-bold text-lg text-gray-800 dark:text-white">
+              {asns.find(a => a.id.toString() === selectedAsnId)?.asn_number}
+            </h2>
+          </div>
+          <button 
+            onClick={() => setSelectedAsnId("")}
+            className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+          >
+            Ganti ASN
+          </button>
+        </div>
+      )}
 
       {selectedAsnId && items.length > 0 && (
         <div className="space-y-4">
@@ -177,11 +240,11 @@ export default function ReceivingTallyingPage() {
                     {savingId === item.id ? "Menyimpan..." : <><Save className="w-4 h-4" /> Simpan</>}
                   </button>
                   <Link 
-                    href={`/inbound/receiving/${item.id}/print`} 
+                    href={`/inbound/asn/pos/${item.id}/print`} 
                     target="_blank"
                     className="flex-1 flex items-center justify-center gap-2 bg-gray-800 text-white p-2 rounded-lg font-medium hover:bg-gray-900 transition-colors"
                   >
-                    <Printer className="w-4 h-4" /> Label Koli
+                    <QrCode className="w-4 h-4" /> Print Label QR
                   </Link>
                 </div>
 

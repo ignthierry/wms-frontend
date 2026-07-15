@@ -1,3 +1,4 @@
+import Swal from "sweetalert2";
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -122,7 +123,7 @@ export default function MasterConsigneePage() {
         fetchData();
       } else {
         const errorData = await res.json();
-        alert("Failed to save consignee: " + JSON.stringify(errorData));
+        Swal.fire("Failed to save consignee: " + JSON.stringify(errorData));
       }
     } catch (error) {
       console.error("Error saving consignee:", error);

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
-import { Pencil, Trash2, Printer, ChevronDown, ChevronRight, Package, User, Search } from "lucide-react";
+import { Pencil, Trash2, Printer, QrCode, ChevronDown, ChevronRight, Package, User, Search } from "lucide-react";
 
 interface Forwarding {
   id: number;
@@ -30,6 +30,7 @@ interface AsnItem {
   item_code: string;
   item_name: string;
   qty_expected: number;
+  packaging?: string;
   consignee?: { consignee_name: string };
 }
 
@@ -254,6 +255,7 @@ export default function AsnPage() {
                                       <TableCell isHeader className="px-4 py-2 font-medium text-gray-500 text-start text-xs">Item Code</TableCell>
                                       <TableCell isHeader className="px-4 py-2 font-medium text-gray-500 text-start text-xs">Item Name</TableCell>
                                       <TableCell isHeader className="px-4 py-2 font-medium text-gray-500 text-center text-xs">Expected Qty</TableCell>
+                                      <TableCell isHeader className="px-4 py-2 font-medium text-gray-500 text-center text-xs">Kemasan</TableCell>
                                       <TableCell isHeader className="px-4 py-2 font-medium text-gray-500 text-right text-xs">Print QR</TableCell>
                                     </TableRow>
                                   </TableHeader>
@@ -272,9 +274,12 @@ export default function AsnPage() {
                                         <TableCell className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 text-center">
                                           {item.qty_expected}
                                         </TableCell>
+                                        <TableCell className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+                                          {item.packaging || "-"}
+                                        </TableCell>
                                         <TableCell className="px-4 py-2 text-right">
                                           <Link href={`/inbound/asn/pos/${item.id}/print`} target="_blank" className="inline-flex items-center justify-center text-gray-500 hover:text-brand-500 bg-gray-100 hover:bg-brand-50 dark:bg-white/[0.05] dark:hover:bg-brand-500/20 p-2 rounded-md transition-colors" title="Print QR Item" onClick={(e) => e.stopPropagation()}>
-                                            <Printer className="w-4 h-4" />
+                                            <QrCode className="w-4 h-4" />
                                           </Link>
                                         </TableCell>
                                       </TableRow>

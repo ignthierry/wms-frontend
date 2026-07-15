@@ -474,7 +474,7 @@ export default function EditAsnPage() {
           </ComponentCard>
 
           <div className="mt-6">
-            <ComponentCard title="LCL Manifest Details">
+            <ComponentCard title="Manifest Details">
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
