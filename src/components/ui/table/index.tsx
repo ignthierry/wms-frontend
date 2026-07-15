@@ -2,31 +2,31 @@ import React, { ReactNode } from "react";
 
 // Props for Table
 interface TableProps {
-  children: ReactNode; // Table content (thead, tbody, etc.)
+  children?: ReactNode; // Table content (thead, tbody, etc.)
   className?: string; // Optional className for styling
 }
 
 // Props for TableHeader
 interface TableHeaderProps {
-  children: ReactNode; // Header row(s)
+  children?: ReactNode; // Header row(s)
   className?: string; // Optional className for styling
 }
 
 // Props for TableBody
 interface TableBodyProps {
-  children: ReactNode; // Body row(s)
+  children?: ReactNode; // Body row(s)
   className?: string; // Optional className for styling
 }
 
 // Props for TableRow
-interface TableRowProps {
-  children: ReactNode; // Cells (th or td)
+interface TableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
+  children?: ReactNode; // Cells (th or td)
   className?: string; // Optional className for styling
 }
 
 // Props for TableCell
 interface TableCellProps {
-  children: ReactNode; // Cell content
+  children?: ReactNode; // Cell content
   isHeader?: boolean; // If true, renders as <th>, otherwise <td>
   className?: string; // Optional className for styling
   colSpan?: number; // Optional colSpan for merging cells
@@ -46,10 +46,9 @@ const TableHeader: React.FC<TableHeaderProps> = ({ children, className }) => {
 const TableBody: React.FC<TableBodyProps> = ({ children, className }) => {
   return <tbody className={className}>{children}</tbody>;
 };
-
 // TableRow Component
-const TableRow: React.FC<TableRowProps> = ({ children, className }) => {
-  return <tr className={className}>{children}</tr>;
+const TableRow: React.FC<TableRowProps> = ({ children, className, ...props }) => {
+  return <tr className={className} {...props}>{children}</tr>;
 };
 
 // TableCell Component
