@@ -198,22 +198,63 @@ export default function MobileScannerPage() {
                   <div id="qr-reader" className="w-full [&>div]:border-none [&>video]:object-cover"></div>
                   {/* Scanner Guide Overlay */}
                   <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
-                      <div className="w-56 h-56 relative animate-pulse-slow">
-                          {/* Top Left */}
-                          <div className="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-brand-500 rounded-tl-lg"></div>
-                          {/* Top Right */}
-                          <div className="absolute top-0 right-0 w-10 h-10 border-t-4 border-r-4 border-brand-500 rounded-tr-lg"></div>
-                          {/* Bottom Left */}
-                          <div className="absolute bottom-0 left-0 w-10 h-10 border-b-4 border-l-4 border-brand-500 rounded-bl-lg"></div>
-                          {/* Bottom Right */}
-                          <div className="absolute bottom-0 right-0 w-10 h-10 border-b-4 border-r-4 border-brand-500 rounded-br-lg"></div>
-                          
+                      <div className="w-[250px] h-[250px] relative">
                           {/* Scanning line animation */}
                           <div className="absolute top-0 left-0 w-full h-1 bg-brand-500/80 shadow-[0_0_10px_rgba(59,130,246,1)] rounded-full" style={{ animation: 'scan 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
                           <style dangerouslySetInnerHTML={{__html: `
                             @keyframes scan {
                                 0%, 100% { transform: translateY(0); }
-                                50% { transform: translateY(14rem); }
+                                50% { transform: translateY(246px); }
+                            }
+                            #qr-reader {
+                                background: white !important;
+                            }
+                            #qr-reader__dashboard_section_csr span {
+                                font-size: 14px;
+                                color: #4b5563;
+                                display: block;
+                                margin-bottom: 8px;
+                            }
+                            #qr-reader a {
+                                display: inline-block;
+                                padding: 10px 20px;
+                                background-color: #3b82f6;
+                                color: white !important;
+                                text-decoration: none;
+                                border-radius: 10px;
+                                font-size: 14px;
+                                font-weight: 600;
+                                margin: 8px 4px;
+                                transition: background-color 0.2s ease;
+                                cursor: pointer;
+                                box-shadow: 0 2px 4px rgba(59,130,246,0.3);
+                            }
+                            #qr-reader a:hover {
+                                background-color: #2563eb;
+                            }
+                            #qr-reader button {
+                                display: inline-block;
+                                padding: 10px 20px;
+                                background-color: #3b82f6;
+                                color: white !important;
+                                border: none;
+                                border-radius: 10px;
+                                font-size: 14px;
+                                font-weight: 600;
+                                margin: 8px 4px;
+                                cursor: pointer;
+                                box-shadow: 0 2px 4px rgba(59,130,246,0.3);
+                            }
+                            #qr-reader select {
+                                padding: 10px;
+                                border: 1px solid #d1d5db;
+                                border-radius: 10px;
+                                font-size: 14px;
+                                margin: 8px 0;
+                                background-color: white;
+                                width: 90%;
+                                max-width: 300px;
+                                outline: none;
                             }
                           `}} />
                       </div>
