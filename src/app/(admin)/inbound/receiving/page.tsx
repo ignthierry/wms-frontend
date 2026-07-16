@@ -13,12 +13,12 @@ interface AsnItem {
   qty_expected: number;
   actual_weight?: number;
   actual_volume?: number;
+  status?: string;
 }
 
 interface Asn {
   id: number;
   asn_number: string;
-  status: string;
   items?: AsnItem[];
 }
 
@@ -28,7 +28,6 @@ export default function ReceivingTallyingPage() {
   const [items, setItems] = useState<AsnItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [savingId, setSavingId] = useState<number | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>("PENDING");
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
 
@@ -111,73 +110,45 @@ export default function ReceivingTallyingPage() {
     }
   };
 
-  const handleCompleteReceiving = async () => {
-    const currentAsn = asns.find(a => a.id.toString() === selectedAsnId);
-    if (currentAsn?.status === 'RECEIVED') {
-      Swal.fire('Info', 'ASN ini sudah berstatus Received.', 'info');
-      return;
-    }
-
+  const handleItemStatus = async (itemId: number, newStatus: string) => {
+    const actionText = newStatus === 'RECEIVED' ? 'menerima' : 'membatalkan';
     const result = await Swal.fire({
       title: 'Apakah Anda yakin?',
-      text: "Pastikan semua barang sudah sesuai sebelum mengubah status ke Received.",
+      text: `Anda akan ${actionText} barang ini.`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#3b82f6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Ya, Tandai Received!',
-      cancelButtonText: 'Batal'
-    });
-
-    if (result.isConfirmed) {
-      try {
-        const res = await fetch(`${apiUrl}/asns/${selectedAsnId}`, {
-          method: "PUT",
-          headers: { "Accept": "application/json", "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "RECEIVED" })
-        });
-        
-        if (res.ok) {
-          setAsns(prev => prev.map(a => a.id.toString() === selectedAsnId ? { ...a, status: "RECEIVED" } : a));
-          Swal.fire('Berhasil!', 'Status ASN telah diubah ke Received.', 'success');
-        } else {
-          Swal.fire('Gagal', 'Gagal mengubah status.', 'error');
-        }
-      } catch (e) {
-        console.error("Failed to update ASN status:", e);
-        Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
-      }
-    }
-  };
-
-  const handleCancelAsn = async () => {
-    const result = await Swal.fire({
-      title: 'Apakah Anda yakin?',
-      text: "ASN ini akan dibatalkan (CANCEL).",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
+      confirmButtonColor: newStatus === 'RECEIVED' ? '#3b82f6' : '#d33',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Ya, Batalkan!',
+      confirmButtonText: 'Ya, Lanjutkan!',
       cancelButtonText: 'Batal'
     });
 
     if (result.isConfirmed) {
       try {
-        const res = await fetch(`${apiUrl}/asns/${selectedAsnId}`, {
+        const res = await fetch(`${apiUrl}/asn-items/${itemId}`, {
           method: "PUT",
           headers: { "Accept": "application/json", "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "CANCEL" })
+          body: JSON.stringify({ status: newStatus })
         });
         
         if (res.ok) {
-          setAsns(prev => prev.map(a => a.id.toString() === selectedAsnId ? { ...a, status: "CANCEL" } : a));
-          Swal.fire('Berhasil!', 'Status ASN telah diubah ke CANCEL.', 'success');
+          setItems(prev => prev.map(i => i.id === itemId ? { ...i, status: newStatus } : i));
+          // Also update items in the ASNs array to persist local state
+          setAsns(prev => prev.map(a => {
+            if (a.id.toString() === selectedAsnId) {
+              return {
+                ...a,
+                items: a.items?.map(i => i.id === itemId ? { ...i, status: newStatus } : i)
+              };
+            }
+            return a;
+          }));
+          Swal.fire('Berhasil!', `Status barang telah diubah menjadi ${newStatus}.`, 'success');
         } else {
           Swal.fire('Gagal', 'Gagal mengubah status.', 'error');
         }
       } catch (e) {
-        console.error("Failed to update ASN status:", e);
+        console.error("Failed to update item status:", e);
         Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
       }
     }
@@ -194,20 +165,14 @@ export default function ReceivingTallyingPage() {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="text-lg font-bold text-gray-800 dark:text-white">Pilih ASN / Manifest</h2>
-            <div className="flex flex-wrap bg-gray-100 p-1 rounded-lg dark:bg-gray-800">
-              <button onClick={() => setStatusFilter("ALL")} className={`px-4 py-2 text-sm font-semibold rounded-md ${statusFilter === "ALL" ? "bg-white shadow-sm dark:bg-gray-700" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}>Semua</button>
-              <button onClick={() => setStatusFilter("PENDING")} className={`px-4 py-2 text-sm font-semibold rounded-md ${statusFilter === "PENDING" ? "bg-white shadow-sm dark:bg-gray-700 text-yellow-600" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}>Pending</button>
-              <button onClick={() => setStatusFilter("RECEIVED")} className={`px-4 py-2 text-sm font-semibold rounded-md ${statusFilter === "RECEIVED" ? "bg-white shadow-sm dark:bg-gray-700 text-green-600" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}>Received</button>
-              <button onClick={() => setStatusFilter("CANCEL")} className={`px-4 py-2 text-sm font-semibold rounded-md ${statusFilter === "CANCEL" ? "bg-white shadow-sm dark:bg-gray-700 text-red-600" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}>Cancel</button>
-            </div>
           </div>
-          {asns.filter(a => statusFilter === "ALL" || a.status === statusFilter).length === 0 ? (
+          {asns.length === 0 ? (
             <p className="text-sm text-gray-500 bg-white p-6 rounded-xl border border-gray-200 dark:bg-gray-900 dark:border-gray-800 text-center">
-              Tidak ada data ASN dengan status {statusFilter}.
+              Tidak ada data ASN.
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {asns.filter(a => statusFilter === "ALL" || a.status === statusFilter).map(asn => (
+              {asns.map(asn => (
                 <div 
                   key={asn.id} 
                   onClick={() => setSelectedAsnId(asn.id.toString())}
@@ -215,12 +180,8 @@ export default function ReceivingTallyingPage() {
                 >
                   <div className="flex justify-between items-center">
                     <h3 className="font-bold text-lg text-gray-800 dark:text-white">{asn.asn_number}</h3>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      asn.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
-                      asn.status === 'CANCEL' ? 'bg-red-100 text-red-800' : 
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {asn.status}
+                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                      {asn.items?.length || 0} Barang
                     </span>
                   </div>
                   <p className="text-sm text-gray-500 mt-2">Klik untuk memproses penerimaan</p>
@@ -237,37 +198,9 @@ export default function ReceivingTallyingPage() {
               <h2 className="font-bold text-lg text-gray-800 dark:text-white">
                 {asns.find(a => a.id.toString() === selectedAsnId)?.asn_number}
               </h2>
-              {asns.find(a => a.id.toString() === selectedAsnId)?.status === 'RECEIVED' && (
-                <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                  RECEIVED
-                </span>
-              )}
-              {asns.find(a => a.id.toString() === selectedAsnId)?.status === 'CANCEL' && (
-                <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                  CANCEL
-                </span>
-              )}
             </div>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
-            {asns.find(a => a.id.toString() === selectedAsnId)?.status !== 'RECEIVED' && asns.find(a => a.id.toString() === selectedAsnId)?.status !== 'CANCEL' && (
-              <>
-                <button 
-                  onClick={handleCompleteReceiving}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  Tandai Received
-                </button>
-                <button 
-                  onClick={handleCancelAsn}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  <XCircle className="w-4 h-4" />
-                  Cancel
-                </button>
-              </>
-            )}
             <button 
               onClick={() => setSelectedAsnId("")}
               className="flex-1 sm:flex-none px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
@@ -290,6 +223,13 @@ export default function ReceivingTallyingPage() {
                   <div>
                     <h3 className="font-bold text-lg text-gray-800 dark:text-white">{item.item_name}</h3>
                     <p className="text-xs font-mono text-gray-500 bg-gray-100 dark:bg-gray-800 dark:text-gray-300 px-2 py-1 rounded inline-block mt-1">{item.item_code}</p>
+                    <span className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${
+                      item.status === 'RECEIVED' ? 'bg-green-100 text-green-800' : 
+                      item.status === 'CANCEL' ? 'bg-red-100 text-red-800' : 
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {item.status || 'PENDING'}
+                    </span>
                   </div>
                   <div className="text-center">
                     <span className="block text-xs text-gray-500 dark:text-gray-400">Qty (Colli)</span>
@@ -322,21 +262,39 @@ export default function ReceivingTallyingPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-2 mt-2">
-                  <button 
-                    onClick={() => handleSaveItem(item)}
-                    disabled={savingId === item.id}
-                    className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white p-2 rounded-lg font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
-                  >
-                    {savingId === item.id ? "Menyimpan..." : <><Save className="w-4 h-4" /> Simpan</>}
-                  </button>
-                  <Link 
-                    href={`/inbound/asn/pos/${item.id}/print`} 
-                    target="_blank"
-                    className="flex-1 flex items-center justify-center gap-2 bg-gray-800 text-white p-2 rounded-lg font-medium hover:bg-gray-900 transition-colors"
-                  >
-                    <QrCode className="w-4 h-4" /> Print Label QR
-                  </Link>
+                <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                  <div className="flex gap-2 flex-1">
+                    <button 
+                      onClick={() => handleSaveItem(item)}
+                      disabled={savingId === item.id}
+                      className="flex-1 flex items-center justify-center gap-2 bg-brand-50 text-brand-600 border border-brand-200 p-2 rounded-lg font-medium hover:bg-brand-100 transition-colors disabled:opacity-50"
+                    >
+                      {savingId === item.id ? "..." : <><Save className="w-4 h-4" /> Simpan</>}
+                    </button>
+                    <Link 
+                      href={`/inbound/asn/pos/${item.id}/print`} 
+                      target="_blank"
+                      className="flex-1 flex items-center justify-center gap-2 bg-gray-800 text-white p-2 rounded-lg font-medium hover:bg-gray-900 transition-colors"
+                    >
+                      <QrCode className="w-4 h-4" /> Print QR
+                    </Link>
+                  </div>
+                  {(!item.status || item.status === 'PENDING') && (
+                    <div className="flex gap-2 flex-1">
+                      <button 
+                        onClick={() => handleItemStatus(item.id, "RECEIVED")}
+                        className="flex-1 flex items-center justify-center gap-1 bg-green-500 text-white p-2 rounded-lg font-medium hover:bg-green-600 transition-colors"
+                      >
+                        <CheckCircle2 className="w-4 h-4" /> Received
+                      </button>
+                      <button 
+                        onClick={() => handleItemStatus(item.id, "CANCEL")}
+                        className="flex-1 flex items-center justify-center gap-1 bg-red-500 text-white p-2 rounded-lg font-medium hover:bg-red-600 transition-colors"
+                      >
+                        <XCircle className="w-4 h-4" /> Cancel
+                      </button>
+                    </div>
+                  )}
                 </div>
 
               </div>

@@ -32,6 +32,7 @@ interface AsnItem {
   qty_expected: number;
   packaging?: string;
   consignee?: { consignee_name: string };
+  status?: string;
 }
 
 interface Asn {
@@ -41,7 +42,6 @@ interface Asn {
   asn_number: string;
   eta: string;
   vehicle_plate: string;
-  status: string;
   no_master_bl?: string;
   no_container?: string;
   voyage?: string;
@@ -116,14 +116,7 @@ export default function AsnPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-      switch(status) {
-          case 'PENDING': return 'warning';
-          case 'RECEIVED': return 'success';
-          case 'CANCELLED': return 'error';
-          default: return 'info';
-      }
-  };
+
 
   return (
     <div className="space-y-6">
@@ -161,18 +154,17 @@ export default function AsnPage() {
                   <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Container Details</TableCell>
                   <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">ETA</TableCell>
                   <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Jumlah Pos</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Status</TableCell>
                   <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 text-right">Actions</TableCell>
                 </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                 {isLoading ? (
                   <TableRow>
-                    <TableCell className="px-5 py-4 text-center" colSpan={7}>Loading...</TableCell>
+                    <TableCell className="px-5 py-4 text-center" colSpan={6}>Loading...</TableCell>
                   </TableRow>
                 ) : asns.length === 0 ? (
                   <TableRow>
-                    <TableCell className="px-5 py-4 text-center" colSpan={7}>No ASNs found.</TableCell>
+                    <TableCell className="px-5 py-4 text-center" colSpan={6}>No ASNs found.</TableCell>
                   </TableRow>
                 ) : (
                   (() => {
@@ -190,7 +182,7 @@ export default function AsnPage() {
                     if (filteredAsns.length === 0) {
                         return (
                           <TableRow>
-                            <TableCell className="px-5 py-4 text-center" colSpan={7}>No matching ASNs found.</TableCell>
+                            <TableCell className="px-5 py-4 text-center" colSpan={6}>No matching ASNs found.</TableCell>
                           </TableRow>
                         );
                     }
@@ -222,11 +214,6 @@ export default function AsnPage() {
                             {asn.items?.length || asn.jumlah_pos || 0} Pos
                           </Badge>
                         </TableCell>
-                        <TableCell className="px-5 py-4 text-start">
-                          <Badge size="sm" color={getStatusColor(asn.status) as any}>
-                            {asn.status}
-                          </Badge>
-                        </TableCell>
                         <TableCell className="px-5 py-4 text-right">
                         <div className="flex justify-end gap-3">
                           <Link href={`/inbound/asn/${asn.id}/edit`} className="text-gray-500 hover:text-brand-500 transition-colors" title="Edit" onClick={(e) => e.stopPropagation()}>
@@ -240,7 +227,7 @@ export default function AsnPage() {
                     </TableRow>
                     {expandedRows.includes(asn.id) && (
                       <TableRow className="bg-gray-50/50 dark:bg-white/[0.01]">
-                        <TableCell colSpan={7} className="p-0">
+                        <TableCell colSpan={6} className="p-0">
                           <div className="px-10 py-5">
                             <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
                               <Package className="w-4 h-4 text-brand-500" />
@@ -256,6 +243,7 @@ export default function AsnPage() {
                                       <TableCell isHeader className="px-4 py-2 font-medium text-gray-500 text-start text-xs">Item Name</TableCell>
                                       <TableCell isHeader className="px-4 py-2 font-medium text-gray-500 text-center text-xs">Expected Qty</TableCell>
                                       <TableCell isHeader className="px-4 py-2 font-medium text-gray-500 text-center text-xs">Kemasan</TableCell>
+                                      <TableCell isHeader className="px-4 py-2 font-medium text-gray-500 text-center text-xs">Status</TableCell>
                                       <TableCell isHeader className="px-4 py-2 font-medium text-gray-500 text-right text-xs">Print QR</TableCell>
                                     </TableRow>
                                   </TableHeader>
@@ -276,6 +264,11 @@ export default function AsnPage() {
                                         </TableCell>
                                         <TableCell className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 text-center">
                                           {item.packaging || "-"}
+                                        </TableCell>
+                                        <TableCell className="px-4 py-2 text-sm text-center">
+                                          <Badge size="sm" color={item.status === 'RECEIVED' ? 'success' : item.status === 'CANCEL' ? 'error' : 'warning'}>
+                                            {item.status || 'PENDING'}
+                                          </Badge>
                                         </TableCell>
                                         <TableCell className="px-4 py-2 text-right">
                                           <Link href={`/inbound/asn/pos/${item.id}/print`} target="_blank" className="inline-flex items-center justify-center text-gray-500 hover:text-brand-500 bg-gray-100 hover:bg-brand-50 dark:bg-white/[0.05] dark:hover:bg-brand-500/20 p-2 rounded-md transition-colors" title="Print QR Item" onClick={(e) => e.stopPropagation()}>
