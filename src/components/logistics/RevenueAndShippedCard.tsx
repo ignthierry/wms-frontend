@@ -6,7 +6,7 @@ import { ApexOptions } from "apexcharts";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-export default function RevenueAndShippedCard() {
+export default function RevenueAndShippedCard({ metrics }: { metrics?: any }) {
   const options: ApexOptions = {
     chart: {
       type: "bar",
@@ -53,10 +53,10 @@ export default function RevenueAndShippedCard() {
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Total revenue earned
+            Total Dokumen Inbound
           </p>
           <h3 className="text-3xl font-medium text-gray-800 dark:text-white/90">
-            $23,445,700
+            {metrics?.total_asn || 0}
           </h3>
         </div>
         <button className="text-gray-400 hover:text-gray-700 dark:hover:text-white">
@@ -67,14 +67,16 @@ export default function RevenueAndShippedCard() {
       <div className="flex items-center justify-between mt-6">
         <div>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Shipped quantities
+            Total Dokumen Outbound
           </p>
           <h3 className="text-3xl font-medium text-gray-800 dark:text-white/90">
-            9,258
+            {metrics?.total_dr || 0}
           </h3>
         </div>
         <div className="h-[60px] w-full max-w-[150px]">
-          <Chart options={options} series={series} type="bar" height={60} />
+          {typeof window !== "undefined" && (
+            <Chart options={options} series={series} type="bar" height={60} />
+          )}
         </div>
       </div>
     </div>

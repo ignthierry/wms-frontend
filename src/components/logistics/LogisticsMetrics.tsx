@@ -1,61 +1,59 @@
 "use client";
 import React from "react";
-import { Package, Truck, CheckCircle } from "lucide-react";
+import { Package, Truck, CheckCircle, Database, Building2 } from "lucide-react";
 
-export default function LogisticsMetrics() {
+export default function LogisticsMetrics({ metrics }: { metrics?: any }) {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {/* Metric 1: Total Orders */}
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Metric 1: Total Inbound (ASN) */}
       <article className="flex items-center gap-5 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/3">
-        <div className="inline-flex h-16 w-16 items-center justify-center rounded-xl bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-white/90">
-          <Package className="h-7 w-7 text-gray-800 dark:text-white/90" />
+        <div className="inline-flex h-16 w-16 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-500">
+          <Package className="h-7 w-7" />
         </div>
         <div>
           <h3 className="text-2xl font-semibold text-gray-800 dark:text-white/90">
-            12,384
+            {metrics?.total_asn || 0}
           </h3>
-          <p className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
-            Total Orders
-            <span className="bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500 inline-flex items-center justify-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-medium">
-              +20%
-            </span>
-          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Total ASN (Inbound)</p>
         </div>
       </article>
 
-      {/* Metric 2: Orders in Transit */}
+      {/* Metric 2: Total Outbound (DR) */}
       <article className="flex items-center gap-5 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/3">
-        <div className="inline-flex h-16 w-16 items-center justify-center rounded-xl bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-white/90">
-          <Truck className="h-7 w-7 text-gray-800 dark:text-white/90" />
+        <div className="inline-flex h-16 w-16 items-center justify-center rounded-xl bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-500">
+          <Truck className="h-7 w-7" />
         </div>
         <div>
           <h3 className="text-2xl font-semibold text-gray-800 dark:text-white/90">
-            728
+            {metrics?.total_dr || 0}
           </h3>
-          <p className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
-            Orders in Transit
-            <span className="bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500 inline-flex items-center justify-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-medium">
-              +12%
-            </span>
-          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Total DR (Outbound)</p>
         </div>
       </article>
 
-      {/* Metric 3: Delivered Orders */}
+      {/* Metric 3: Total Stock */}
       <article className="flex items-center gap-5 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/3">
-        <div className="inline-flex h-16 w-16 items-center justify-center rounded-xl bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-white/90">
-          <CheckCircle className="h-7 w-7 text-gray-800 dark:text-white/90" />
+        <div className="inline-flex h-16 w-16 items-center justify-center rounded-xl bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-500">
+          <Database className="h-7 w-7" />
         </div>
         <div>
           <h3 className="text-2xl font-semibold text-gray-800 dark:text-white/90">
-            11,540
+            {metrics?.total_stock_qty || 0}
           </h3>
-          <p className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
-            Delivered Orders
-            <span className="bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500 inline-flex items-center justify-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-medium">
-              +15%
-            </span>
-          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Total Stock Qty</p>
+        </div>
+      </article>
+
+      {/* Metric 4: Total Warehouses */}
+      <article className="flex items-center gap-5 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/3">
+        <div className="inline-flex h-16 w-16 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-500">
+          <Building2 className="h-7 w-7" />
+        </div>
+        <div>
+          <h3 className="text-2xl font-semibold text-gray-800 dark:text-white/90">
+            {metrics?.total_warehouse || 0}
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Total Warehouses</p>
         </div>
       </article>
     </div>
