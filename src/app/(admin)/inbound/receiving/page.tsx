@@ -69,11 +69,15 @@ export default function ReceivingTallyingPage() {
     }
   }, [selectedAsnId, asns, apiUrl]);
 
-  const handleInputChange = (id: number, field: "actual_weight" | "actual_volume", value: string) => {
+  const handleInputChange = (id: number, field: "actual_weight" | "actual_volume" | "status", value: string) => {
     setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, [field]: value === "" ? undefined : parseFloat(value) } : item
-      )
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        if (field === "status") {
+          return { ...item, status: value };
+        }
+        return { ...item, [field]: value === "" ? undefined : parseFloat(value) };
+      })
     );
   };
 
@@ -88,10 +92,20 @@ export default function ReceivingTallyingPage() {
         },
         body: JSON.stringify({
           actual_weight: item.actual_weight,
-          actual_volume: item.actual_volume
+          actual_volume: item.actual_volume,
+          status: item.status
         })
       });
       if (res.ok) {
+        setAsns(prev => prev.map(a => {
+          if (a.id.toString() === selectedAsnId) {
+            return {
+              ...a,
+              items: a.items?.map(i => i.id === item.id ? { ...i, status: item.status, actual_weight: item.actual_weight, actual_volume: item.actual_volume } : i)
+            };
+          }
+          return a;
+        }));
         Swal.fire({
           title: 'Berhasil!',
           text: 'Data pengukuran berhasil disimpan!',
@@ -110,49 +124,7 @@ export default function ReceivingTallyingPage() {
     }
   };
 
-  const handleItemStatus = async (itemId: number, newStatus: string) => {
-    const actionText = newStatus === 'RECEIVED' ? 'menerima' : 'membatalkan';
-    const result = await Swal.fire({
-      title: 'Apakah Anda yakin?',
-      text: `Anda akan ${actionText} barang ini.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: newStatus === 'RECEIVED' ? '#3b82f6' : '#d33',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Ya, Lanjutkan!',
-      cancelButtonText: 'Batal'
-    });
 
-    if (result.isConfirmed) {
-      try {
-        const res = await fetch(`${apiUrl}/asn-items/${itemId}`, {
-          method: "PUT",
-          headers: { "Accept": "application/json", "Content-Type": "application/json" },
-          body: JSON.stringify({ status: newStatus })
-        });
-        
-        if (res.ok) {
-          setItems(prev => prev.map(i => i.id === itemId ? { ...i, status: newStatus } : i));
-          // Also update items in the ASNs array to persist local state
-          setAsns(prev => prev.map(a => {
-            if (a.id.toString() === selectedAsnId) {
-              return {
-                ...a,
-                items: a.items?.map(i => i.id === itemId ? { ...i, status: newStatus } : i)
-              };
-            }
-            return a;
-          }));
-          Swal.fire('Berhasil!', `Status barang telah diubah menjadi ${newStatus}.`, 'success');
-        } else {
-          Swal.fire('Gagal', 'Gagal mengubah status.', 'error');
-        }
-      } catch (e) {
-        console.error("Failed to update item status:", e);
-        Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
-      }
-    }
-  };
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-20">
@@ -237,33 +209,63 @@ export default function ReceivingTallyingPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Actual Weight (Kg)</label>
-                    <input 
-                      type="number" 
-                      step="0.01"
-                      placeholder="0.00"
-                      value={item.actual_weight || ""}
-                      onChange={(e) => handleInputChange(item.id, "actual_weight", e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                    />
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Status</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange(item.id, "status", "RECEIVED")}
+                        className={`flex-1 flex items-center justify-center gap-1 px-2 rounded-lg font-medium transition-all border h-[42px] text-sm ${
+                          item.status === 'RECEIVED' 
+                            ? 'bg-green-500 text-white border-green-500 shadow-sm ring-1 ring-green-500' 
+                            : 'bg-white text-gray-500 border-gray-300 hover:bg-green-50 hover:text-green-600 hover:border-green-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        <CheckCircle2 className="w-4 h-4" /> Received
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange(item.id, "status", "CANCEL")}
+                        className={`flex-1 flex items-center justify-center gap-1 px-2 rounded-lg font-medium transition-all border h-[42px] text-sm ${
+                          item.status === 'CANCEL' 
+                            ? 'bg-red-500 text-white border-red-500 shadow-sm ring-1 ring-red-500' 
+                            : 'bg-white text-gray-500 border-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        <XCircle className="w-4 h-4" /> Cancel
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Actual Volume (CBM)</label>
-                    <input 
-                      type="number" 
-                      step="0.001"
-                      placeholder="0.000"
-                      value={item.actual_volume || ""}
-                      onChange={(e) => handleInputChange(item.id, "actual_volume", e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                    />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Actual Weight (Kg)</label>
+                      <input 
+                        type="number" 
+                        step="0.01"
+                        placeholder="0.00"
+                        value={item.actual_weight || ""}
+                        onChange={(e) => handleInputChange(item.id, "actual_weight", e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white h-[42px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Actual Volume (CBM)</label>
+                      <input 
+                        type="number" 
+                        step="0.001"
+                        placeholder="0.000"
+                        value={item.actual_volume || ""}
+                        onChange={(e) => handleInputChange(item.id, "actual_volume", e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white h-[42px]"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2 mt-2">
-                  <div className="flex gap-2 flex-1">
+                <div className="flex flex-col gap-3 mt-3">
+                  <div className="flex gap-2 w-full">
                     <button 
                       onClick={() => handleSaveItem(item)}
                       disabled={savingId === item.id}
@@ -279,22 +281,6 @@ export default function ReceivingTallyingPage() {
                       <QrCode className="w-4 h-4" /> Print QR
                     </Link>
                   </div>
-                  {(!item.status || item.status === 'PENDING') && (
-                    <div className="flex gap-2 flex-1">
-                      <button 
-                        onClick={() => handleItemStatus(item.id, "RECEIVED")}
-                        className="flex-1 flex items-center justify-center gap-1 bg-green-500 text-white p-2 rounded-lg font-medium hover:bg-green-600 transition-colors"
-                      >
-                        <CheckCircle2 className="w-4 h-4" /> Received
-                      </button>
-                      <button 
-                        onClick={() => handleItemStatus(item.id, "CANCEL")}
-                        className="flex-1 flex items-center justify-center gap-1 bg-red-500 text-white p-2 rounded-lg font-medium hover:bg-red-600 transition-colors"
-                      >
-                        <XCircle className="w-4 h-4" /> Cancel
-                      </button>
-                    </div>
-                  )}
                 </div>
 
               </div>

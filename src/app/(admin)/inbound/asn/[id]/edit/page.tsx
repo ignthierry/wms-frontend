@@ -34,6 +34,7 @@ interface AsnItem {
   packaging?: string;
   item_condition?: string;
   remarks?: string;
+  status?: string;
 }
 
 const getCardStyle = (index: number) => {
@@ -81,7 +82,6 @@ export default function EditAsnPage() {
     eta: "",
     driver_name: "",
     vehicle_plate: "",
-    status: "PENDING",
     no_master_bl: "",
     tgl: "",
     tanggal_tiba: "",
@@ -145,7 +145,6 @@ export default function EditAsnPage() {
             eta: formattedEta,
             driver_name: asn.driver_name || "",
             vehicle_plate: asn.vehicle_plate || "",
-            status: asn.status || "PENDING",
             no_master_bl: asn.no_master_bl || "",
             tgl: asn.tgl || "",
             tanggal_tiba: asn.tanggal_tiba || "",
@@ -192,7 +191,7 @@ export default function EditAsnPage() {
         if (numPos > newItems.length) {
             for (let i = newItems.length; i < numPos; i++) {
                 newItems.push({
-                    item_code: "", item_name: "", qty_expected: 1, pos_number: (i + 1).toString(), expiry_date: "", host_bl: "", consignee_id: "", packaging: "", item_condition: "", remarks: ""
+                    item_code: "", item_name: "", qty_expected: 1, pos_number: (i + 1).toString(), expiry_date: "", host_bl: "", consignee_id: "", packaging: "", item_condition: "", remarks: "", status: "PENDING"
                 });
             }
         } else if (numPos < newItems.length) {
@@ -457,18 +456,6 @@ export default function EditAsnPage() {
                   />
                 </div>
 
-                <div>
-                  <Label>Status</Label>
-                  <div className="relative">
-                    <Select
-                      options={statusOptions}
-                      placeholder="Select Status"
-                      onChange={(value) => handleSelectChange('status', value)}
-                      className="dark:bg-dark-900"
-                    />
-                    <div className="mt-1 text-xs text-gray-400">Current Status: {formData.status} (Select again if needed)</div>
-                  </div>
-                </div>
               </div>
             </div>
           </ComponentCard>
@@ -668,6 +655,18 @@ export default function EditAsnPage() {
                                               <option value="NORMAL">Normal</option>
                                               <option value="RUSAK">Rusak</option>
                                               <option value="BASAH">Basah</option>
+                                           </select>
+                                       </div>
+                                       <div>
+                                           <Label>Status</Label>
+                                           <select 
+                                              className="w-full h-11 rounded-lg border border-gray-200 px-4 py-2.5 text-theme-sm text-gray-800 bg-transparent dark:border-gray-800 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                                              value={item.status || 'PENDING'}
+                                              onChange={(e) => handleItemChange(index, 'status', e.target.value)}
+                                           >
+                                              <option value="PENDING">PENDING</option>
+                                              <option value="RECEIVED">RECEIVED</option>
+                                              <option value="CANCELLED">CANCELLED</option>
                                            </select>
                                        </div>
                                        <div>
