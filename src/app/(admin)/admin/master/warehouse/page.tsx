@@ -30,6 +30,7 @@ interface Location {
   bin_location: string;
   barcode_loc: string;
   is_empty: boolean | number;
+  capacity?: number;
   warehouse?: Warehouse;
 }
 
@@ -47,7 +48,7 @@ export default function MasterWarehousePage() {
   const [isLocModalOpen, setIsLocModalOpen] = useState(false);
   const [isLocEditMode, setIsLocEditMode] = useState(false);
   const [locFormData, setLocFormData] = useState({
-    id: 0, warehouse_id: "", zone: "", aisle: "", rack_row: "", tier: "", barcode_loc: "", is_empty: 1
+    id: 0, warehouse_id: "", zone: "", aisle: "", rack_row: "", tier: "", barcode_loc: "", is_empty: 1, capacity: 0
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -137,11 +138,12 @@ export default function MasterWarehousePage() {
       setLocFormData({
         ...loc,
         warehouse_id: loc.warehouse_id.toString(),
-        is_empty: loc.is_empty ? 1 : 0
+        is_empty: loc.is_empty ? 1 : 0,
+        capacity: loc.capacity || 0
       });
     } else {
       setIsLocEditMode(false);
-      setLocFormData({ id: 0, warehouse_id: "", zone: "", aisle: "", rack_row: "", tier: "", barcode_loc: "", is_empty: 1 });
+      setLocFormData({ id: 0, warehouse_id: "", zone: "", aisle: "", rack_row: "", tier: "", barcode_loc: "", is_empty: 1, capacity: 0 });
     }
     setIsLocModalOpen(true);
   };
@@ -261,15 +263,16 @@ export default function MasterWarehousePage() {
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Barcode / ID</TableCell>
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Gudang</TableCell>
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Zone-Aisle-Row-Tier</TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Kapasitas</TableCell>
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs">Status</TableCell>
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-right text-theme-xs">Aksi</TableCell>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                   {isLoading ? (
-                    <TableRow><TableCell className="px-5 py-4 text-center" colSpan={5}>Loading...</TableCell></TableRow>
+                    <TableRow><TableCell className="px-5 py-4 text-center" colSpan={6}>Loading...</TableCell></TableRow>
                   ) : locations.length === 0 ? (
-                    <TableRow><TableCell className="px-5 py-4 text-center" colSpan={5}>Belum ada data lokasi.</TableCell></TableRow>
+                    <TableRow><TableCell className="px-5 py-4 text-center" colSpan={6}>Belum ada data lokasi.</TableCell></TableRow>
                   ) : (
                     locations.map((loc) => (
                       <TableRow key={loc.id}>
@@ -279,6 +282,9 @@ export default function MasterWarehousePage() {
                         </TableCell>
                         <TableCell className="px-5 py-4 text-theme-sm text-brand-500 font-mono bg-brand-50 dark:bg-brand-900/20 inline-block px-2 py-1 rounded mt-3">
                           {loc.bin_location || `${loc.zone}-${loc.aisle}-${loc.rack_row}-${loc.tier}`}
+                        </TableCell>
+                        <TableCell className="px-5 py-4 text-theme-sm">
+                          {loc.capacity ? `${loc.capacity} CBM` : '-'}
                         </TableCell>
                         <TableCell className="px-5 py-4 text-theme-sm">
                           {loc.is_empty ? (
@@ -364,6 +370,10 @@ export default function MasterWarehousePage() {
               <label className="block text-sm font-medium mb-1">Tingkat (Tier)</label>
               <input type="text" required value={locFormData.tier} onChange={e => setLocFormData({...locFormData, tier: e.target.value})} className="w-full px-4 py-2 border rounded-lg bg-transparent focus:ring-2 focus:ring-brand-500" />
             </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Kapasitas Maksimal (CBM)</label>
+            <input type="number" step="0.01" min="0" required value={locFormData.capacity} onChange={e => setLocFormData({...locFormData, capacity: parseFloat(e.target.value) || 0})} className="w-full px-4 py-2 border rounded-lg bg-transparent focus:ring-2 focus:ring-brand-500" />
           </div>
           <div className="flex justify-end gap-3 mt-6">
             <Button variant="outline" onClick={() => setIsLocModalOpen(false)} type="button">Batal</Button>

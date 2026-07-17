@@ -17,8 +17,8 @@ export default function MobileScannerPage() {
   // Form states
   const [blockLocation, setBlockLocation] = useState("");
   const [itemCondition, setItemCondition] = useState("NORMAL");
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
@@ -116,8 +116,8 @@ export default function MobileScannerPage() {
   };
 
   const handlePhotoCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
       setIsLoading(true);
       try {
         const options = {
@@ -125,14 +125,27 @@ export default function MobileScannerPage() {
           maxWidthOrHeight: 1200, // max resolution
           useWebWorker: true,
         };
-        const compressedFile = await imageCompression(file, options);
-        setPhotoFile(compressedFile);
         
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPhotoPreview(reader.result as string);
-        };
-        reader.readAsDataURL(compressedFile);
+        const newCompressedFiles: File[] = [];
+        const newPreviews: string[] = [];
+        
+        for (const file of files) {
+          const compressedFile = await imageCompression(file, options);
+          newCompressedFiles.push(compressedFile);
+          
+          const reader = new FileReader();
+          const previewUrl = await new Promise<string>((resolve) => {
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(compressedFile);
+          });
+          newPreviews.push(previewUrl);
+        }
+        
+        setPhotoFiles(prev => [...prev, ...newCompressedFiles]);
+        setPhotoPreviews(prev => [...prev, ...newPreviews]);
+        
+        // reset input so same file can be selected again if needed
+        if (fileInputRef.current) fileInputRef.current.value = "";
       } catch (error) {
         console.error("Error compressing image:", error);
         Swal.fire('Error', 'Gagal memproses foto', 'error');
@@ -142,12 +155,9 @@ export default function MobileScannerPage() {
     }
   };
 
-  const removePhoto = () => {
-    setPhotoPreview(null);
-    setPhotoFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+  const removePhoto = (index: number) => {
+    setPhotoPreviews(prev => prev.filter((_, i) => i !== index));
+    setPhotoFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,8 +171,11 @@ export default function MobileScannerPage() {
       formData.append('block_location', blockLocation);
       formData.append('item_condition', itemCondition);
       
-      if (photoFile) {
-          formData.append('photo_proof_file', photoFile);
+      if (photoFiles.length > 0) {
+          photoFiles.forEach(f => {
+              formData.append('photo_proof_files[]', f);
+          });
+          formData.append('jenis_foto', 'in');
       }
 
       const res = await fetch(`${apiUrl}/asn-items/${item.id}`, {
@@ -176,7 +189,8 @@ export default function MobileScannerPage() {
       if (res.ok) {
         Swal.fire('Berhasil', 'Status dan lokasi item berhasil diperbarui!', 'success');
         setItem(null);
-        removePhoto();
+        setPhotoPreviews([]);
+        setPhotoFiles([]);
         isProcessingRef.current = false;
         if (scannerRef.current) {
             try { scannerRef.current.resume(); } catch(e) {}
@@ -348,35 +362,61 @@ export default function MobileScannerPage() {
                       </div>
 
                       <div>
-                          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Foto Aktual</label>
-                          {!photoPreview ? (
-                            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 transition-colors">
-                                <div className="flex flex-col items-center justify-center pt-5 pb-6 text-brand-500">
-                                  <Camera className="w-8 h-8 mb-2" />
-                                  <p className="text-xs font-semibold">Ambil Foto / Upload</p>
-                                </div>
-                                <input 
-                                  type="file" 
-                                  className="hidden" 
-                                  accept="image/*" 
-                                  capture="environment"
-                                  ref={fileInputRef}
-                                  onChange={handlePhotoCapture}
-                                />
-                            </label>
-                          ) : (
-                            <div className="relative w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                                <img src={photoPreview} alt="Preview" className="w-full h-40 object-cover" />
-                                <button 
-                                  type="button"
-                                  onClick={removePhoto}
-                                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-transform hover:scale-110"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                            </div>
+                          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Upload Foto (Multiple / Dropzone)</label>
+                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 transition-colors">
+                              <div className="flex flex-col items-center justify-center pt-5 pb-6 text-brand-500">
+                                <Camera className="w-8 h-8 mb-2" />
+                                <p className="text-xs font-semibold">Ambil Foto / Pilih Multiple Files</p>
+                              </div>
+                              <input 
+                                type="file" 
+                                className="hidden" 
+                                accept="image/*" 
+                                capture="environment"
+                                multiple
+                                ref={fileInputRef}
+                                onChange={handlePhotoCapture}
+                              />
+                          </label>
+
+                          {photoPreviews.length > 0 && (
+                              <div className="mt-4 grid grid-cols-3 gap-2">
+                                  {photoPreviews.map((preview, idx) => (
+                                      <div key={idx} className="relative w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 aspect-square">
+                                          <img src={preview} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
+                                          <button 
+                                            type="button"
+                                            onClick={() => removePhoto(idx)}
+                                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-transform hover:scale-110"
+                                          >
+                                            <X className="w-3 h-3" />
+                                          </button>
+                                      </div>
+                                  ))}
+                              </div>
                           )}
                       </div>
+
+                      {item.photos && item.photos.length > 0 && (
+                          <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+                              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Galeri Foto Sebelumnya</label>
+                              <div className="grid grid-cols-3 gap-2">
+                                  {item.photos.map((photo: any, idx: number) => {
+                                      const url = photo.photo_proof.startsWith('http') 
+                                          ? photo.photo_proof 
+                                          : `${apiUrl}/photos/${photo.photo_proof.replace('photo_proofs/', '')}`;
+                                      return (
+                                          <div key={idx} className="relative w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 aspect-square group">
+                                              <img src={url} alt={`Foto ${idx}`} className="w-full h-full object-cover" />
+                                              <div className="absolute bottom-0 inset-x-0 bg-black/60 p-1 text-center">
+                                                  <span className="text-[10px] text-white font-semibold uppercase">{photo.jenis_foto}</span>
+                                              </div>
+                                          </div>
+                                      );
+                                  })}
+                              </div>
+                          </div>
+                      )}
                   </div>
 
                   <div className="p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">

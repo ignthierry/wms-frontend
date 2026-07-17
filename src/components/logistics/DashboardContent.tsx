@@ -6,6 +6,7 @@ import RevenueAndShippedCard from "./RevenueAndShippedCard";
 import DeliveryVehiclesCard from "./DeliveryVehiclesCard";
 import TrackingDeliveryTimeline from "./TrackingDeliveryTimeline";
 import DeliveryActivitiesTable from "./DeliveryActivitiesTable";
+import SorDonutChart from "./SorDonutChart";
 
 export default function DashboardContent() {
   const [data, setData] = useState<any>(null);
@@ -48,7 +49,14 @@ export default function DashboardContent() {
       </div>
 
       <div className="col-span-12 space-y-6 lg:col-span-8">
-        <DeliveryStatisticsChart chartData={data?.chart_data} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <DeliveryStatisticsChart chartData={data?.chart_data} />
+          </div>
+          <div className="lg:col-span-1">
+            <SorDonutChart metrics={data?.metrics} />
+          </div>
+        </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <RevenueAndShippedCard metrics={data?.metrics} />
           <DeliveryVehiclesCard />
