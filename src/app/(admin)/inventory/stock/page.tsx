@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Package, Search, Filter, Image as ImageIcon, XCircle } from "lucide-react";
+import { Package, Search, Filter, Image as ImageIcon, XCircle, Download } from "lucide-react";
 
 interface AsnItem {
   id: number;
@@ -44,7 +44,7 @@ export default function StockSummaryPage() {
   const [receivedItems, setReceivedItems] = useState<AsnItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [selectedItemForPhoto, setSelectedItemForPhoto] = useState<AsnItem | null>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
@@ -200,11 +200,7 @@ export default function StockSummaryPage() {
                     <td className="p-4 text-center align-middle">
                       {item.photo_proof ? (
                         <button 
-                          onClick={() => setSelectedPhoto(
-                            item.photo_proof!.startsWith('http') 
-                              ? item.photo_proof! 
-                              : `${apiUrl}/photos/${item.photo_proof?.replace('photo_proofs/', '')}`
-                          )}
+                          onClick={() => setSelectedItemForPhoto(item)}
                           className="p-2 bg-gray-100 text-gray-600 hover:bg-brand-50 hover:text-brand-600 rounded-lg transition-colors inline-flex justify-center items-center"
                           title="Lihat Foto"
                         >
@@ -222,16 +218,70 @@ export default function StockSummaryPage() {
         )}
       </div>
 
-      {selectedPhoto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setSelectedPhoto(null)}>
-          <div className="relative bg-white rounded-xl shadow-xl max-w-2xl w-full p-2" onClick={e => e.stopPropagation()}>
-            <button 
-              onClick={() => setSelectedPhoto(null)}
-              className="absolute -top-3 -right-3 bg-white text-gray-500 hover:text-red-500 rounded-full p-1 shadow-md border border-gray-200"
-            >
-              <XCircle className="w-6 h-6" />
-            </button>
-            <img src={selectedPhoto} alt="Bukti Foto" className="w-full h-auto rounded-lg object-contain max-h-[80vh]" />
+      {selectedItemForPhoto && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => setSelectedItemForPhoto(null)}>
+          <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
+              <div>
+                <h3 className="font-bold text-gray-900 dark:text-white text-lg">
+                  {selectedItemForPhoto.item_name}
+                </h3>
+                <p className="text-xs text-gray-500 font-mono mt-0.5">
+                  {selectedItemForPhoto.item_code} | POS: {selectedItemForPhoto.pos_number || "-"}
+                </p>
+              </div>
+              <button 
+                onClick={() => setSelectedItemForPhoto(null)}
+                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+            
+            {/* Image Content */}
+            <div className="bg-gray-100 dark:bg-black p-4 flex justify-center items-center relative min-h-[300px]">
+              <img 
+                src={selectedItemForPhoto.photo_proof!.startsWith('http') 
+                  ? selectedItemForPhoto.photo_proof! 
+                  : `${apiUrl}/photos/${selectedItemForPhoto.photo_proof?.replace('photo_proofs/', '')}`
+                } 
+                alt="Bukti Foto" 
+                className="max-w-full h-auto object-contain max-h-[65vh] rounded shadow-sm" 
+              />
+            </div>
+            
+            {/* Footer with Download Button */}
+            <div className="p-4 bg-white dark:bg-gray-900 flex justify-end items-center border-t border-gray-100 dark:border-gray-800">
+              <button 
+                onClick={async () => {
+                  try {
+                    const url = selectedItemForPhoto.photo_proof!.startsWith('http') 
+                      ? selectedItemForPhoto.photo_proof! 
+                      : `${apiUrl}/photos/${selectedItemForPhoto.photo_proof?.replace('photo_proofs/', '')}`;
+                    
+                    const response = await fetch(url);
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.download = `Photo_${selectedItemForPhoto.item_code}_${selectedItemForPhoto.pos_number || 'POS'}.jpg`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(blobUrl);
+                  } catch (err) {
+                    console.error("Download failed:", err);
+                    alert("Gagal mengunduh foto.");
+                  }
+                }}
+                className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95"
+              >
+                <Download className="w-4 h-4" />
+                Unduh Foto
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Camera, AlertCircle, Save, X, RefreshCcw, Scan, MapPin, Package } from "lucide-react";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 import Swal from "sweetalert2";
+import imageCompression from 'browser-image-compression';
 
 export default function MobileScannerPage() {
   const [manualQr, setManualQr] = useState("");
@@ -114,15 +115,30 @@ export default function MobileScannerPage() {
       handleSearchQr(manualQr);
   };
 
-  const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setPhotoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      setIsLoading(true);
+      try {
+        const options = {
+          maxSizeMB: 1, // compress to max 1MB
+          maxWidthOrHeight: 1200, // max resolution
+          useWebWorker: true,
+        };
+        const compressedFile = await imageCompression(file, options);
+        setPhotoFile(compressedFile);
+        
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPhotoPreview(reader.result as string);
+        };
+        reader.readAsDataURL(compressedFile);
+      } catch (error) {
+        console.error("Error compressing image:", error);
+        Swal.fire('Error', 'Gagal memproses foto', 'error');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
