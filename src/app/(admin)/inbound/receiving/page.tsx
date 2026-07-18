@@ -19,6 +19,13 @@ interface AsnItem {
 interface Asn {
   id: number;
   asn_number: string;
+  no_master_bl?: string;
+  no_container?: string;
+  tgl?: string;
+  created_at?: string;
+  forwarding?: {
+    forwarding_name: string;
+  };
   items?: AsnItem[];
 }
 
@@ -41,7 +48,9 @@ export default function ReceivingTallyingPage() {
       const res = await fetch(`${apiUrl}/asns`, { headers: { "Accept": "application/json" } });
       if (res.ok) {
         const data = await res.json();
-        setAsns(data.data || data);
+        const asnsList: Asn[] = data.data || data;
+        const sortedAsns = asnsList.sort((a, b) => b.id - a.id);
+        setAsns(sortedAsns);
       }
     } catch (error) {
       console.error("Error fetching ASNs:", error);
@@ -101,15 +110,15 @@ export default function ReceivingTallyingPage() {
           if (a.id.toString() === selectedAsnId) {
             return {
               ...a,
-              items: a.items?.map(i => i.id === item.id ? { ...i, status: item.status, actual_weight: item.actual_weight, actual_volume: item.actual_volume } : i)
+              items: a.items?.map(i => i.id === item.id ? { ...i, ...item } : i)
             };
           }
           return a;
         }));
         Swal.fire({
-          title: 'Berhasil!',
-          text: 'Data pengukuran berhasil disimpan!',
           icon: 'success',
+          title: 'Tersimpan',
+          text: 'Data item berhasil di-update.',
           timer: 1500,
           showConfirmButton: false
         });
@@ -148,15 +157,32 @@ export default function ReceivingTallyingPage() {
                 <div 
                   key={asn.id} 
                   onClick={() => setSelectedAsnId(asn.id.toString())}
-                  className="bg-white p-5 rounded-xl border border-gray-200 dark:bg-gray-900 dark:border-gray-800 shadow-sm cursor-pointer hover:border-brand-500 hover:shadow-md transition-all"
+                  className="bg-white p-5 rounded-xl border border-gray-200 dark:bg-gray-900 dark:border-gray-800 shadow-sm cursor-pointer hover:border-brand-500 hover:shadow-md transition-all flex flex-col gap-3"
                 >
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-lg text-gray-800 dark:text-white">{asn.asn_number}</h3>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-800 dark:text-white">{asn.asn_number}</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{asn.tgl || new Date(asn.created_at || '').toLocaleDateString('id-ID')}</p>
+                    </div>
                     <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                       {asn.items?.length || 0} Barang
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500 mt-2">Klik untuk memproses penerimaan</p>
+                  <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                    <div>
+                      <span className="block text-xs text-gray-400 dark:text-gray-500">Master BL</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-200">{asn.no_master_bl || "-"}</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs text-gray-400 dark:text-gray-500">Container</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-200">{asn.no_container || "-"}</span>
+                    </div>
+                    <div className="col-span-2 mt-1 pt-2 border-t border-gray-200 dark:border-gray-700">
+                      <span className="block text-xs text-gray-400 dark:text-gray-500">Forwarding</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-200 truncate block">{asn.forwarding?.forwarding_name || "-"}</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-brand-500 font-medium text-center mt-1 border-t border-gray-100 dark:border-gray-800 pt-3">Klik untuk memproses penerimaan</p>
                 </div>
               ))}
             </div>
@@ -188,8 +214,17 @@ export default function ReceivingTallyingPage() {
           <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-2">Daftar Barang (Tally Sheet)</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {items.map((item) => (
-              <div key={item.id} className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm dark:bg-gray-900 dark:border-gray-800 flex flex-col gap-4">
+            {items.map((item, index) => {
+              const borderColors = [
+                'border-t-4 border-t-blue-500 border-x border-b border-gray-200 dark:border-x-gray-800 dark:border-b-gray-800',
+                'border-t-4 border-t-emerald-500 border-x border-b border-gray-200 dark:border-x-gray-800 dark:border-b-gray-800',
+                'border-t-4 border-t-amber-500 border-x border-b border-gray-200 dark:border-x-gray-800 dark:border-b-gray-800',
+                'border-t-4 border-t-purple-500 border-x border-b border-gray-200 dark:border-x-gray-800 dark:border-b-gray-800',
+                'border-t-4 border-t-rose-500 border-x border-b border-gray-200 dark:border-x-gray-800 dark:border-b-gray-800'
+              ];
+              const borderClass = borderColors[index % borderColors.length];
+              return (
+              <div key={item.id} className={`bg-white p-5 rounded-xl shadow-sm dark:bg-gray-900 flex flex-col gap-4 ${borderClass}`}>
                 
                 <div className="flex justify-between items-start border-b border-gray-100 pb-3 dark:border-gray-700">
                   <div>
@@ -215,7 +250,7 @@ export default function ReceivingTallyingPage() {
                     <div className="flex gap-2">
                       <button
                         type="button"
-                        onClick={() => handleInputChange(item.id, "status", "RECEIVED")}
+                        onClick={() => handleInputChange(item.id, "status", item.status === 'RECEIVED' ? 'PENDING' : 'RECEIVED')}
                         className={`flex-1 flex items-center justify-center gap-1 px-2 rounded-lg font-medium transition-all border h-[42px] text-sm ${
                           item.status === 'RECEIVED' 
                             ? 'bg-green-500 text-white border-green-500 shadow-sm ring-1 ring-green-500' 
@@ -226,7 +261,7 @@ export default function ReceivingTallyingPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleInputChange(item.id, "status", "CANCEL")}
+                        onClick={() => handleInputChange(item.id, "status", item.status === 'CANCEL' ? 'PENDING' : 'CANCEL')}
                         className={`flex-1 flex items-center justify-center gap-1 px-2 rounded-lg font-medium transition-all border h-[42px] text-sm ${
                           item.status === 'CANCEL' 
                             ? 'bg-red-500 text-white border-red-500 shadow-sm ring-1 ring-red-500' 
@@ -284,7 +319,8 @@ export default function ReceivingTallyingPage() {
                 </div>
 
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

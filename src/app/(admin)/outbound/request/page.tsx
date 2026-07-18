@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Truck, FileText, Search, Plus, Calculator, Download } from "lucide-react";
 import Swal from "sweetalert2";
 import DatePicker from "@/components/form/date-picker";
@@ -23,6 +24,11 @@ export default function DeliveryRequestPage() {
     no_referensi: "",
     tgl_invoice: "",
   });
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
 
@@ -210,8 +216,8 @@ export default function DeliveryRequestPage() {
       </div>
 
       {/* Modal Form */}
-      {isModalOpen && selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
+      {isModalOpen && selectedItem && mounted && createPortal(
+        <div className="fixed inset-0 z-[999999] flex items-start justify-center p-4 bg-black/60 backdrop-blur-md overflow-y-auto">
           <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 my-8 sm:my-12">
             <div className="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -278,7 +284,8 @@ export default function DeliveryRequestPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

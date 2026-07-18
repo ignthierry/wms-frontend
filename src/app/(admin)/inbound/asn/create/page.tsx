@@ -12,6 +12,7 @@ import { Plus, X } from "lucide-react";
 import ReactSelect from "react-select";
 import DatePicker from "@/components/form/date-picker";
 import Swal from "sweetalert2";
+import { useTheme } from "@/context/ThemeContext";
 
 interface Forwarding {
   id: number;
@@ -65,6 +66,8 @@ const getCardStyle = (index: number) => {
 
 export default function CreateAsnPage() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [forwardings, setForwardings] = useState<Forwarding[]>([]);
   const [masterConsignees, setMasterConsignees] = useState<any[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -338,15 +341,41 @@ export default function CreateAsnPage() {
   ];
 
   const customSelectStyles = {
-    control: (provided: any) => ({
+    control: (provided: any, state: any) => ({
       ...provided,
       minHeight: '44px',
       borderRadius: '0.5rem',
-      borderColor: '#d1d5db',
+      backgroundColor: isDark ? '#111827' : '#ffffff',
+      borderColor: state.isFocused ? '#3b82f6' : (isDark ? '#374151' : '#d1d5db'),
       boxShadow: 'none',
       '&:hover': {
-        borderColor: '#9ca3af'
+        borderColor: isDark ? '#4b5563' : '#9ca3af'
       }
+    }),
+    singleValue: (provided: any) => ({
+      ...provided,
+      color: isDark ? '#f3f4f6' : '#111827',
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      backgroundColor: isDark ? '#1f2937' : '#ffffff',
+      border: isDark ? '1px solid #374151' : '1px solid #e5e7eb',
+    }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isSelected 
+        ? '#3b82f6' 
+        : state.isFocused 
+          ? (isDark ? '#374151' : '#f3f4f6') 
+          : 'transparent',
+      color: state.isSelected 
+        ? '#ffffff'
+        : (isDark ? '#f3f4f6' : '#111827'),
+      cursor: 'pointer'
+    }),
+    input: (provided: any) => ({
+      ...provided,
+      color: isDark ? '#f3f4f6' : '#111827',
     })
   };
 
@@ -517,13 +546,13 @@ export default function CreateAsnPage() {
                     <Label>Size Container</Label>
                     <select 
                       name="size"
-                      className="w-full h-11 rounded-lg border border-gray-200 px-4 py-2.5 text-theme-sm text-gray-800 bg-transparent dark:border-gray-800 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                      className="w-full h-11 rounded-lg border border-gray-200 px-4 py-2.5 text-theme-sm text-gray-800 bg-transparent dark:bg-gray-900 dark:border-gray-800 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                       value={formData.size}
                       onChange={handleInputChange}
                     >
-                      <option value="">Pilih Size</option>
-                      <option value="20ft">20ft</option>
-                      <option value="40ft">40ft</option>
+                      <option value="" className="dark:bg-gray-900 dark:text-white">Pilih Size</option>
+                      <option value="20ft" className="dark:bg-gray-900 dark:text-white">20ft</option>
+                      <option value="40ft" className="dark:bg-gray-900 dark:text-white">40ft</option>
                     </select>
                   </div>
                 </div>

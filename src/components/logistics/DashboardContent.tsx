@@ -4,7 +4,6 @@ import LogisticsMetrics from "./LogisticsMetrics";
 import DeliveryStatisticsChart from "./DeliveryStatisticsChart";
 import RevenueAndShippedCard from "./RevenueAndShippedCard";
 import DeliveryVehiclesCard from "./DeliveryVehiclesCard";
-import TrackingDeliveryTimeline from "./TrackingDeliveryTimeline";
 import DeliveryActivitiesTable from "./DeliveryActivitiesTable";
 import SorDonutChart from "./SorDonutChart";
 
@@ -48,7 +47,7 @@ export default function DashboardContent() {
         <LogisticsMetrics metrics={data?.metrics} />
       </div>
 
-      <div className="col-span-12 space-y-6 lg:col-span-8">
+      <div className="col-span-12 space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <DeliveryStatisticsChart chartData={data?.chart_data} />
@@ -61,10 +60,6 @@ export default function DashboardContent() {
           <RevenueAndShippedCard metrics={data?.metrics} />
           <DeliveryVehiclesCard />
         </div>
-      </div>
-
-      <div className="col-span-12 lg:col-span-4">
-        <TrackingDeliveryTimeline asns={data?.recent_asns} drs={data?.recent_drs} />
       </div>
 
       <div className="col-span-12">

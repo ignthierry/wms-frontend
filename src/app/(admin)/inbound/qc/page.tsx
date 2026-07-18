@@ -303,13 +303,24 @@ export default function MobileScannerPage() {
           {/* Result Card */}
           {item && (
               <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-4">
-                  <div className="bg-gray-800 text-white p-4 flex justify-between items-start">
+                  <div className={`${
+                      item.status === 'RECEIVED' ? 'bg-emerald-600' : 
+                      item.status === 'CANCEL' ? 'bg-red-600' : 
+                      'bg-gray-800'
+                  } text-white p-4 flex justify-between items-start transition-colors`}>
                       <div>
                           <h3 className="font-bold flex items-center gap-2">
-                              <Package className="w-5 h-5 text-brand-400" /> {item.item_code}
+                              <Package className="w-5 h-5 text-white/80" /> {item.item_code}
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ml-2 ${
+                                  item.status === 'RECEIVED' ? 'bg-emerald-100 text-emerald-800' : 
+                                  item.status === 'CANCEL' ? 'bg-red-100 text-red-800' : 
+                                  'bg-white/20 text-white'
+                              }`}>
+                                  {item.status || 'PENDING'}
+                              </span>
                           </h3>
-                          <p className="text-sm text-gray-300 mt-1">{item.item_name}</p>
-                          <p className="text-xs text-brand-300 mt-1">ASN: {item.asn?.asn_number || '-'}</p>
+                          <p className="text-sm text-white/90 mt-1">{item.item_name}</p>
+                          <p className="text-xs text-white/70 mt-1">ASN: {item.asn?.asn_number || '-'}</p>
                       </div>
                       <button 
                           type="button" 
