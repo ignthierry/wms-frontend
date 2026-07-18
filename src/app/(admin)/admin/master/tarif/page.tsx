@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Tag, Search, Save, X } from "lucide-react";
 import Swal from "sweetalert2";
+import { Modal } from "@/components/ui/modal";
 
 export default function MasterTarifPage() {
   const [tarifs, setTarifs] = useState<any[]>([]);
@@ -236,20 +237,18 @@ export default function MasterTarifPage() {
       </div>
 
       {/* Modal Form */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-800 my-8">
-            <div className="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Tag className="w-5 h-5 text-brand-500" />
-                {editingId ? 'Edit Tarif' : 'Tambah Tarif Baru'}
-              </h3>
-              <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="p-5">
+      <Modal isOpen={isModalOpen} onClose={closeModal} className="max-w-2xl">
+        <div className="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Tag className="w-5 h-5 text-brand-500" />
+            {editingId ? 'Edit Tarif' : 'Tambah Tarif Baru'}
+          </h3>
+          <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-5">
               <div className="space-y-5">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Nama Kategori Tarif <span className="text-error-500">*</span></label>
@@ -328,9 +327,7 @@ export default function MasterTarifPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+      </Modal>
     </div>
   );
 }

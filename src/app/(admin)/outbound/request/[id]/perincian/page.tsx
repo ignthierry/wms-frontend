@@ -113,6 +113,7 @@ function PerincianContent({ id }: { id: string }) {
           </div>
           <div className="ml-auto text-right">
             <h2 className="text-3xl font-extrabold text-gray-800 tracking-wider">INVOICE LCL</h2>
+            <p className="text-gray-600 mt-1 text-sm font-bold tracking-wide">No. {data.invoice_number || "Draft"}</p>
           </div>
         </div>
 
@@ -120,89 +121,69 @@ function PerincianContent({ id }: { id: string }) {
         <div className="flex justify-between border-t border-b border-gray-300 py-4 mb-4 text-xs">
           <div className="w-1/2">
             <p className="text-gray-500 font-bold mb-1 uppercase">Kepada (Bill To)</p>
-            <p className="font-bold text-sm uppercase">KARYA LINTAS BAHARI</p>
-            <p className="uppercase text-[10px] mt-1 text-gray-600">Perumahan Grand Indra Prasta B2 No.23 003/007</p>
+            <p className="font-bold text-sm uppercase">{data.asn_item?.consignee?.name || "KARYA LINTAS BAHARI"}</p>
+            <p className="uppercase text-[10px] mt-1 text-gray-600">{data.asn_item?.consignee?.address || "-"}</p>
           </div>
-          <div className="w-1/2 flex justify-end gap-16">
-            <div>
-              <p className="text-gray-500 mb-1">No BC11</p>
-              <p className="font-bold mb-3">002251</p>
-              <p className="text-gray-500 mb-1">TPS Asal</p>
-              <p className="font-bold">ICT</p>
-            </div>
-            <div>
-              <p className="text-gray-500 mb-1">Tanggal BC11</p>
-              <p className="font-bold mb-3">24-05-2026</p>
+          <div className="w-1/2 flex justify-end">
+            <div className="text-right">
               <p className="text-gray-500 mb-1">Tanggal Invoice</p>
               <p className="font-bold">{data.tanggal_invoice}</p>
             </div>
           </div>
         </div>
 
-        {/* Details Grid */}
-        <div className="grid grid-cols-4 gap-4 bg-gray-50 p-4 text-[10px] mb-6 border border-gray-200 rounded-sm">
-          <div><p className="text-gray-500 mb-0.5">Kapal / Voyage</p><p className="font-bold">EVER BUILD 1194 / 086A</p></div>
-          <div><p className="text-gray-500 mb-0.5">Principal</p><p className="font-bold">-</p></div>
-          <div className="col-span-2"><p className="text-gray-500 mb-0.5">Container / Size</p><p className="font-bold">EMCU8806350 / 40</p></div>
+        <div className="grid grid-cols-5 gap-4 bg-gray-50 p-5 text-[11px] mb-4 border border-gray-200 rounded-sm">
+          <div><p className="text-gray-500 mb-1">Tanggal Stripping</p><p className="font-bold text-[12px]">{data.tanggal_stripping}</p></div>
+          <div><p className="text-gray-500 mb-1">Durasi Penumpukan</p><p className="font-bold text-[12px]">{data.days} Hari</p></div>
+          <div><p className="text-gray-500 mb-1">Jumlah Kemasan</p><p className="font-bold text-[12px]">{data.qty} {data.asn_item?.packaging_type || "PC (Pieces)"}</p></div>
+          <div><p className="text-gray-500 mb-1">Berat (Weight)</p><p className="font-bold text-[12px]">{formatAngka(data.weight)} Kg</p></div>
+          <div><p className="text-gray-500 mb-1">Volume (Measure)</p><p className="font-bold text-[12px]">{data.volume} M3</p></div>
+        </div>
 
-          <div><p className="text-gray-500 mb-0.5">Tgl Masuk TPS Asal</p><p className="font-bold">24/05/26</p></div>
-          <div><p className="text-gray-500 mb-0.5">Tgl Masuk Everwin</p><p className="font-bold">{data.tanggal_masuk}</p></div>
-          <div><p className="text-gray-500 mb-0.5">Tgl Keluar Everwin</p><p className="font-bold">{data.tanggal_invoice}</p></div>
-          <div><p className="text-gray-500 mb-0.5">Durasi Penumpukan</p><p className="font-bold">{data.days} Hari</p></div>
-
-          <div className="col-span-2"><p className="text-gray-500 mb-0.5">Jenis Barang</p><p className="font-bold uppercase pr-4">{data.item_description}</p></div>
-          <div className="col-span-2"><p className="text-gray-500 mb-0.5">Jumlah Kemasan</p><p className="font-bold">{data.qty} PC (Pieces)</p></div>
-
-          <div className="col-span-2"><p className="text-gray-500 mb-0.5">Berat (Weight)</p><p className="font-bold">{formatAngka(data.weight)} Kg</p></div>
-          <div className="col-span-2"><p className="text-gray-500 mb-0.5">Volume (Measure)</p><p className="font-bold">{data.volume} M3</p></div>
+        {/* Jenis Barang Section */}
+        <div className="bg-blue-50/50 p-4 mb-6 border border-blue-100 rounded-sm">
+          <p className="text-blue-800/70 text-[10px] font-bold uppercase mb-1">Jenis Barang</p>
+          <p className="font-bold text-[13px] text-blue-900 uppercase">{data.item_description}</p>
         </div>
 
         {/* Table items */}
-        <table className="w-full text-[11px] mb-6">
-          <thead>
-            <tr className="border-t-2 border-b-2 border-gray-800 bg-gray-50">
-              <th className="py-2.5 text-left font-extrabold tracking-wider w-1/2">KETERANGAN</th>
-              <th className="py-2.5 text-center font-extrabold tracking-wider">QTY</th>
-              <th className="py-2.5 text-center font-extrabold tracking-wider">UNIT</th>
-              <th className="py-2.5 text-right font-extrabold tracking-wider">TARIF</th>
-              <th className="py-2.5 text-center font-extrabold tracking-wider">HARI</th>
-              <th className="py-2.5 text-right font-extrabold tracking-wider">TOTAL</th>
+        <table className="w-full text-[11px] mb-6 border-collapse border border-gray-300">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="py-2.5 px-3 border border-gray-300 text-left font-extrabold tracking-wider w-1/2">KETERANGAN</th>
+              <th className="py-2.5 px-3 border border-gray-300 text-center font-extrabold tracking-wider">QTY</th>
+              <th className="py-2.5 px-3 border border-gray-300 text-center font-extrabold tracking-wider">UNIT</th>
+              <th className="py-2.5 px-3 border border-gray-300 text-right font-extrabold tracking-wider">TARIF</th>
+              <th className="py-2.5 px-3 border border-gray-300 text-center font-extrabold tracking-wider">HARI</th>
+              <th className="py-2.5 px-3 border border-gray-300 text-right font-extrabold tracking-wider">TOTAL</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-dashed divide-gray-200">
-            <tr>
-               <td colSpan={6} className="py-2.5 font-bold underline">BIAYA PT. EVERWIN LOGISTICS</td>
-            </tr>
-            {data.other_fees && data.other_fees.length > 0 && (
-               <tr className="hover:bg-gray-50 transition-colors">
-                 <td className="py-2 font-semibold uppercase">{data.other_fees[0].keterangan}</td>
-                 <td className="py-2 text-center">{data.other_fees[0].qty}</td>
-                 <td className="py-2 text-center">{data.other_fees[0].unit}</td>
-                 <td className="py-2 text-right">{formatAngka(data.other_fees[0].tarif)}</td>
-                 <td className="py-2 text-center">{data.other_fees[0].hari}</td>
-                 <td className="py-2 text-right">{formatAngka(data.other_fees[0].total)}</td>
+          <tbody>
+            {data.storage_details && data.storage_details.length > 0 && (
+               <tr className="bg-gray-50">
+                 <td colSpan={6} className="py-2 px-3 border border-gray-300 font-extrabold uppercase text-gray-800">Biaya Penumpukan</td>
                </tr>
             )}
             
             {data.storage_details && data.storage_details.map((s: any, i: number) => (
                <tr key={'s'+i} className="hover:bg-gray-50 transition-colors">
-                 <td className="py-2 font-semibold uppercase pl-4">{s.keterangan}</td>
-                 <td className="py-2 text-center">{s.qty}</td>
-                 <td className="py-2 text-center">{s.unit}</td>
-                 <td className="py-2 text-right">{formatAngka(s.tarif)}</td>
-                 <td className="py-2 text-center">{s.hari}</td>
-                 <td className="py-2 text-right">{formatAngka(s.total)}</td>
+                 <td className="py-2 px-3 border border-gray-300 font-semibold uppercase pl-6 text-gray-700">{s.keterangan}</td>
+                 <td className="py-2 px-3 border border-gray-300 text-center">{s.qty}</td>
+                 <td className="py-2 px-3 border border-gray-300 text-center">{s.unit}</td>
+                 <td className="py-2 px-3 border border-gray-300 text-right">{formatAngka(s.tarif)}</td>
+                 <td className="py-2 px-3 border border-gray-300 text-center">{s.hari}</td>
+                 <td className="py-2 px-3 border border-gray-300 text-right">{formatAngka(s.total)}</td>
                </tr>
             ))}
 
-            {data.other_fees && data.other_fees.slice(1).map((f: any, i: number) => (
+            {data.other_fees && data.other_fees.map((f: any, i: number) => (
                <tr key={'f'+i} className="hover:bg-gray-50 transition-colors">
-                 <td className="py-2 font-semibold uppercase">{f.keterangan}</td>
-                 <td className="py-2 text-center">{f.qty}</td>
-                 <td className="py-2 text-center">{f.unit}</td>
-                 <td className="py-2 text-right">{formatAngka(f.tarif)}</td>
-                 <td className="py-2 text-center">{f.hari}</td>
-                 <td className="py-2 text-right">{formatAngka(f.total)}</td>
+                 <td className="py-2 px-3 border border-gray-300 font-semibold uppercase">{f.keterangan}</td>
+                 <td className="py-2 px-3 border border-gray-300 text-center">{f.qty}</td>
+                 <td className="py-2 px-3 border border-gray-300 text-center">{f.unit}</td>
+                 <td className="py-2 px-3 border border-gray-300 text-right">{formatAngka(f.tarif)}</td>
+                 <td className="py-2 px-3 border border-gray-300 text-center">{f.hari}</td>
+                 <td className="py-2 px-3 border border-gray-300 text-right">{formatAngka(f.total)}</td>
                </tr>
             ))}
           </tbody>
@@ -222,22 +203,6 @@ function PerincianContent({ id }: { id: string }) {
            </div>
         </div>
 
-        {/* Moving Fee */}
-        <div className="text-[11px] mb-6">
-           <div className="font-bold underline mb-2">MOVING</div>
-           <table className="w-full text-left">
-              <tbody>
-                 <tr className="border-t border-b border-gray-200">
-                    <td className="py-2 w-1/2 font-semibold uppercase">BIAYA MOVING</td>
-                    <td className="py-2 text-center">1</td>
-                    <td className="py-2 text-center">Ls</td>
-                    <td className="py-2 text-right">{formatAngka(data.moving_fee)}</td>
-                    <td className="py-2 text-center">1</td>
-                    <td className="py-2 text-right font-bold">{formatAngka(data.moving_fee)}</td>
-                 </tr>
-              </tbody>
-           </table>
-        </div>
 
         {/* Grand Total */}
         <div className="flex justify-end items-end gap-4 bg-gray-50 p-4 border border-gray-200 rounded-sm mb-6">

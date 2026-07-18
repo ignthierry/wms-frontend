@@ -201,9 +201,10 @@ export default function DeliveryRequestPage() {
                       ) : (
                         <button 
                           onClick={() => openModal(item)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors text-sm font-medium"
+                          title="Buat DR & Invoice"
+                          className="inline-flex items-center justify-center w-8 h-8 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors shadow-sm"
                         >
-                          <Plus className="w-4 h-4" /> Buat DR & Invoice
+                          <FileText className="w-4 h-4" />
                         </button>
                       )}
                     </td>
@@ -244,7 +245,7 @@ export default function DeliveryRequestPage() {
                   id="tgl_sppb"
                   label="Tanggal SPPB"
                   dateFormat="Y-m-d"
-                  isStatic={false}
+                  isStatic={true}
                   defaultDate={formData.tgl_sppb || undefined}
                   onChange={(_, dateStr) => setFormData({ ...formData, tgl_sppb: dateStr })}
                 />
@@ -263,7 +264,7 @@ export default function DeliveryRequestPage() {
                   id="tgl_invoice"
                   label="Tanggal Invoice"
                   dateFormat="Y-m-d"
-                  isStatic={false}
+                  isStatic={true}
                   defaultDate={formData.tgl_invoice || undefined}
                   onChange={(_, dateStr) => setFormData({ ...formData, tgl_invoice: dateStr })}
                 />
