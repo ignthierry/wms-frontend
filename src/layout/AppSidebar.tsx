@@ -35,6 +35,7 @@ import {
   Receipt,
   LineChart,
   Banknote,
+  Camera,
 } from "lucide-react";
 
 type NavItem = {
@@ -73,6 +74,7 @@ const internalStaffItems: NavItem[] = [
     name: "Manajemen Barang Keluar",
     subItems: [
       { name: "Permintaan Pengiriman", path: "/outbound/request", icon: <Send className="w-4 h-4" /> },
+      { name: "Outbound QC", path: "/outbound/qc", icon: <Camera className="w-4 h-4" /> },
       { name: "Pengemasan & Verifikasi", path: "/outbound/packing", icon: <CheckSquare className="w-4 h-4" /> },
       { name: "Pengiriman", path: "/outbound/dispatch", icon: <Truck className="w-4 h-4" /> },
     ],

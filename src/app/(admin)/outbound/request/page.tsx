@@ -50,8 +50,8 @@ export default function DeliveryRequestPage() {
         const data = await res.json();
         const allItems = data.data || data;
         
-        // Filter items that are received
-        const eligible = allItems.filter((i: any) => i.status === 'RECEIVED');
+        // Filter items that are received and do not have an invoice
+        const eligible = allItems.filter((i: any) => i.status === 'RECEIVED' && !i.invoice);
         setItems(eligible);
       }
     } catch (error) {
@@ -102,9 +102,8 @@ export default function DeliveryRequestPage() {
       });
 
       if (res.ok) {
-        Swal.fire('Berhasil', 'Berhasil membuat Permintaan Pengeluaran dan Invoice!', 'success');
         closeModal();
-        fetchItems(); // Refresh
+        router.push(`/outbound/request/${selectedItem.id}/perincian?print=true`);
       } else {
         const errorData = await res.json();
         Swal.fire('Gagal', `Gagal: ${errorData.message || "Terjadi kesalahan"}`, 'error');

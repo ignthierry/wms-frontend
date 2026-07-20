@@ -20,6 +20,14 @@ function PerincianContent({ id }: { id: string }) {
     fetchPerincian();
   }, [id]);
 
+  useEffect(() => {
+    if (data && searchParams.get('print') === 'true') {
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    }
+  }, [data, searchParams]);
+
   const fetchPerincian = async () => {
     setIsLoading(true);
     try {
@@ -60,9 +68,10 @@ function PerincianContent({ id }: { id: string }) {
   };
 
   const terbilang = (angka: number): string => {
+    angka = Math.floor(angka || 0);
     const huruf = ["", "SATU", "DUA", "TIGA", "EMPAT", "LIMA", "ENAM", "TUJUH", "DELAPAN", "SEMBILAN", "SEPULUH", "SEBELAS"];
     let hasil = "";
-    if (angka < 12) hasil = huruf[angka];
+    if (angka < 12) hasil = huruf[angka] || "";
     else if (angka < 20) hasil = terbilang(angka - 10) + " BELAS";
     else if (angka < 100) hasil = terbilang(Math.floor(angka / 10)) + " PULUH " + terbilang(angka % 10);
     else if (angka < 200) hasil = "SERATUS " + terbilang(angka - 100);
