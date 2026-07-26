@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Camera, AlertCircle, Save, X, RefreshCcw, Scan, MapPin, Package } from "lucide-react";
+import { Camera, AlertCircle, Save, X, RefreshCcw, Scan, MapPin, Package, Trash2 } from "lucide-react";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 import Swal from "sweetalert2";
 import imageCompression from 'browser-image-compression';
@@ -158,6 +158,50 @@ export default function MobileScannerPage() {
   const removePhoto = (index: number) => {
     setPhotoPreviews(prev => prev.filter((_, i) => i !== index));
     setPhotoFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDeleteExistingPhoto = async (photoId: number) => {
+    const result = await Swal.fire({
+      title: 'Hapus Foto?',
+      text: 'Apakah Anda yakin ingin menghapus foto ini?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`${apiUrl}/asn-item-photos/${photoId}`, {
+          method: 'DELETE',
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (res.ok) {
+          setItem((prev: any) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              photos: (prev.photos || []).filter((p: any) => p.id !== photoId)
+            };
+          });
+          Swal.fire({
+            title: 'Terhapus!',
+            text: 'Foto berhasil dihapus.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } else {
+          Swal.fire('Gagal', 'Gagal menghapus foto.', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire('Error', 'Terjadi kesalahan saat menghapus foto.', 'error');
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -419,6 +463,14 @@ export default function MobileScannerPage() {
                                       return (
                                           <div key={idx} className="relative w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 aspect-square group">
                                               <img src={url} alt={`Foto ${idx}`} className="w-full h-full object-cover" />
+                                              <button
+                                                type="button"
+                                                onClick={() => handleDeleteExistingPhoto(photo.id)}
+                                                className="absolute top-1 right-1 p-1 bg-red-600/90 text-white rounded-full shadow-lg hover:bg-red-700 transition-transform hover:scale-110 z-10"
+                                                title="Hapus Foto"
+                                              >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                              </button>
                                               <div className="absolute bottom-0 inset-x-0 bg-black/60 p-1 text-center">
                                                   <span className="text-[10px] text-white font-semibold uppercase">{photo.jenis_foto}</span>
                                               </div>

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Package, Search, Filter, Image as ImageIcon, XCircle, Download, Calendar, Maximize2, X, History, MapPin, Tag, CheckCircle2, ArrowRight } from "lucide-react";
+import { Package, Search, Filter, Image as ImageIcon, XCircle, Download, Calendar, Maximize2, X, History, MapPin, Tag, CheckCircle2, ArrowRight, Trash2 } from "lucide-react";
+import Swal from "sweetalert2";
 
 interface AsnItem {
   id: number;
@@ -106,6 +107,57 @@ export default function StockSummaryPage() {
       console.error("Error fetching stock summary:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeletePhotoInStock = async (photoId: number) => {
+    const result = await Swal.fire({
+      title: 'Hapus Foto?',
+      text: 'Apakah Anda yakin ingin menghapus foto ini?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`${apiUrl}/asn-item-photos/${photoId}`, {
+          method: 'DELETE',
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (res.ok) {
+          setSelectedItemForPhoto((prev: any) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              photos: (prev.photos || []).filter((p: any) => p.id !== photoId)
+            };
+          });
+          setReceivedItems((prevItems: any[]) =>
+            prevItems.map((it: any) =>
+              it.id === selectedItemForPhoto?.id
+                ? { ...it, photos: (it.photos || []).filter((p: any) => p.id !== photoId) }
+                : it
+            )
+          );
+          Swal.fire({
+            title: 'Terhapus!',
+            text: 'Foto berhasil dihapus.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } else {
+          Swal.fire('Gagal', 'Gagal menghapus foto.', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire('Error', 'Terjadi kesalahan saat menghapus foto.', 'error');
+      }
     }
   };
 
@@ -342,30 +394,42 @@ export default function StockSummaryPage() {
                         </div>
                         <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 pt-12 flex justify-between items-end opacity-0 transition-opacity duration-300">
                           <span className="text-[10px] font-bold text-white uppercase tracking-wider bg-brand-600/90 px-2.5 py-1 rounded-full shadow-sm backdrop-blur-sm">{photo.jenis_foto}</span>
-                          <button
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              try {
-                                const response = await fetch(url);
-                                const blob = await response.blob();
-                                const blobUrl = URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = blobUrl;
-                                link.download = `Photo_${selectedItemForPhoto.item_code}_${photo.jenis_foto}_${idx}.jpg`;
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                                URL.revokeObjectURL(blobUrl);
-                              } catch (err) {
-                                console.error("Download failed:", err);
-                                alert("Gagal mengunduh foto.");
-                              }
-                            }}
-                            className="p-2 bg-white/20 hover:bg-white/40 text-white rounded-lg transition-colors backdrop-blur-sm"
-                            title="Download"
-                          >
-                            <Download className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  const response = await fetch(url);
+                                  const blob = await response.blob();
+                                  const blobUrl = URL.createObjectURL(blob);
+                                  const link = document.createElement('a');
+                                  link.href = blobUrl;
+                                  link.download = `Photo_${selectedItemForPhoto.item_code}_${photo.jenis_foto}_${idx}.jpg`;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  URL.revokeObjectURL(blobUrl);
+                                } catch (err) {
+                                  console.error("Download failed:", err);
+                                  alert("Gagal mengunduh foto.");
+                                }
+                              }}
+                              className="p-2 bg-white/20 hover:bg-white/40 text-white rounded-lg transition-colors backdrop-blur-sm"
+                              title="Download"
+                            >
+                              <Download className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeletePhotoInStock(photo.id);
+                              }}
+                              className="p-2 bg-red-600/80 hover:bg-red-600 text-white rounded-lg transition-colors backdrop-blur-sm"
+                              title="Hapus Foto"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
