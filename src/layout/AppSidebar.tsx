@@ -112,6 +112,7 @@ const superAdminItems: NavItem[] = [
   },
   { icon: <PlugInIcon />, name: "Konfigurasi", path: "/admin/configurations" },
   { icon: <ListIcon />, name: "Log Sistem", path: "/admin/logs" },
+  { icon: <FileText className="w-5 h-5" />, name: "User Log", path: "/admin/user-logs" },
 ];
 
 const AppSidebar: React.FC = () => {
