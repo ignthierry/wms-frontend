@@ -7,6 +7,8 @@ import DeliveryVehiclesCard from "./DeliveryVehiclesCard";
 import DeliveryActivitiesTable from "./DeliveryActivitiesTable";
 import SorDonutChart from "./SorDonutChart";
 
+import Cookies from "js-cookie";
+
 export default function DashboardContent() {
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,8 +21,12 @@ export default function DashboardContent() {
 
   const fetchDashboardData = async () => {
     try {
+      const token = Cookies.get("auth_token");
       const res = await fetch(`${apiUrl}/dashboard`, {
-        headers: { "Accept": "application/json" }
+        headers: {
+          "Accept": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
       });
       if (res.ok) {
         const json = await res.json();
