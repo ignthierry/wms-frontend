@@ -16,6 +16,15 @@ export default function DashboardContent() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
 
   useEffect(() => {
+    // Guard: role forwarding tidak boleh melihat dashboard admin internal
+    try {
+      const role = Cookies.get("user_role");
+      if (role === "forwarding") {
+        window.location.href = "/client";
+        return;
+      }
+    } catch {}
+
     fetchDashboardData();
   }, []);
 

@@ -29,7 +29,8 @@ export function middleware(request: NextRequest) {
   // Client path: boleh diakses forwarding (dan admin), tapi admin tetap bisa akses.
   // Blokir client (forwarding) untuk mengakses rute admin internal.
   if (token && role === 'forwarding' && isAdminPath) {
-    return NextResponse.redirect(new URL('/', request.url));
+    // Redirect ke dashboard client, bukan ke '/' (yang justru admin path -> loop)
+    return NextResponse.redirect(new URL('/client', request.url));
   }
 
   return NextResponse.next();
