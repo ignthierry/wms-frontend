@@ -9,7 +9,7 @@ import { apiBase, authHeaders, statusLabel, statusColor, timeAgo, fmtIDR } from 
 const STATUS_FILTERS = [
   { value: "", label: "Semua" },
   { value: "RECEIVED", label: "Diterima" },
-  { value: "PENDING", label: "Di Gudang" },
+  { value: "PENDING", label: "Pending" },
   { value: "READY_TO_DISPATCH", label: "Siap Kirim" },
 ];
 

@@ -38,7 +38,7 @@ export function fullIDR(v: number | string | null | undefined): string {
 export function statusLabel(status?: string): string {
   switch (status) {
     case "RECEIVED": return "Diterima";
-    case "PENDING": return "Di Gudang";
+    case "PENDING": return "Pending";
     case "READY_TO_DISPATCH": return "Siap Kirim";
     case "DISPATCHED": return "Dikirim";
     case "PAID": return "Lunas";

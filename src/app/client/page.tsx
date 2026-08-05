@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Package, ArrowDownToLine, ArrowUpFromLine, MapPin, Boxes, ChevronRight } from "lucide-react";
+import { Package, ArrowDownToLine, ArrowUpFromLine, Boxes, ChevronRight, Hourglass } from "lucide-react";
 import { apiBase, authHeaders, statusLabel, statusColor, timeAgo, fmtIDR } from "@/components/client/api";
 import WarehouseBanner from "@/components/client/WarehouseBanner";
 
@@ -63,7 +63,7 @@ export default function ClientDashboardPage() {
   const kpis = [
     { label: "Inbound", value: m.inbound ?? 0, icon: ArrowDownToLine, color: "text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20" },
     { label: "Outbound", value: m.outbound ?? 0, icon: ArrowUpFromLine, color: "text-violet-600 bg-violet-50 border-violet-200 dark:text-violet-400 dark:bg-violet-500/10 dark:border-violet-500/20" },
-    { label: "Di Gudang", value: m.in_warehouse ?? 0, icon: MapPin, color: "text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/20" },
+    { label: "Pending", value: m.in_warehouse ?? 0, icon: Hourglass, color: "text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/20" },
     { label: "Total Barang", value: m.total_items ?? 0, icon: Boxes, color: "text-brand-600 bg-brand-50 border-brand-200 dark:text-brand-400 dark:bg-brand-500/10 dark:border-brand-500/20" },
   ];
 
