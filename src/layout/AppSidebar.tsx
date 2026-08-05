@@ -87,7 +87,11 @@ const internalStaffItems: NavItem[] = [
   {
     icon: <LineChart className="w-5 h-5" />,
     name: "Laporan",
-    path: "/laporan",
+    subItems: [
+      { name: "Dashboard Laporan", path: "/laporan", icon: <LineChart className="w-4 h-4" /> },
+      { name: "Keuangan", path: "/laporan/keuangan", icon: <Receipt className="w-4 h-4" /> },
+      { name: "Operasional", path: "/laporan/operasional", icon: <Truck className="w-4 h-4" /> },
+    ],
   },
 ];
 
