@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Package, ArrowDownToLine, ArrowUpFromLine, Boxes, ChevronRight, Hourglass } from "lucide-react";
+import { Package, ChevronRight, Hourglass, Warehouse, Send, FileText, Grid3x3 } from "lucide-react";
 import { apiBase, authHeaders, statusLabel, statusColor, timeAgo, fmtIDR } from "@/components/client/api";
 import WarehouseBanner from "@/components/client/WarehouseBanner";
 
@@ -11,11 +11,13 @@ interface Item {
   id: number;
   item_name: string;
   item_code: string;
+  pos_number: string | null;
   status: string;
   block_location: string | null;
   updated_at: string;
   consignee?: { name: string };
   invoice?: { total_amount: number | null; status: string } | null;
+  asn?: { asn_number: string; no_container: string | null; no_master_bl: string | null } | null;
 }
 
 export default function ClientDashboardPage() {
@@ -59,22 +61,21 @@ export default function ClientDashboardPage() {
   const items = data?.recent_items || [];
   const userName = data?.consignees?.[0]?.name || "";
 
-  // Hanya KPI yang TIDAK ada di banner (Total Barang & Invoice Belum Bayar sudah di banner)
-  const kpis = [
-    { label: "Inbound", value: m.inbound ?? 0, icon: ArrowDownToLine, color: "text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20" },
-    { label: "Outbound", value: m.outbound ?? 0, icon: ArrowUpFromLine, color: "text-violet-600 bg-violet-50 border-violet-200 dark:text-violet-400 dark:bg-violet-500/10 dark:border-violet-500/20" },
-    { label: "Pending", value: m.in_warehouse ?? 0, icon: Hourglass, color: "text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/20" },
-    { label: "Total Barang", value: m.total_items ?? 0, icon: Boxes, color: "text-brand-600 bg-brand-50 border-brand-200 dark:text-brand-400 dark:bg-brand-500/10 dark:border-brand-500/20" },
-  ];
+  // KPI urut sesuai alur logistik: Pending > In Gudang > Siap Kirim
+    const kpis = [
+      { label: "Pending", value: m.pending ?? 0, icon: Hourglass, color: "text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/20" },
+      { label: "In Gudang", value: m.in_warehouse ?? 0, icon: Warehouse, color: "text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20" },
+      { label: "Siap Kirim", value: m.ready ?? 0, icon: Send, color: "text-violet-600 bg-violet-50 border-violet-200 dark:text-violet-400 dark:bg-violet-500/10 dark:border-violet-500/20" },
+    ];
 
   return (
     <div className="space-y-6">
       {/* Banner Hero */}
       <WarehouseBanner name={userName} totalItems={m.total_items ?? 0} unpaidInvoices={m.unpaid_invoices ?? 0} />
 
-      {/* KPI Grid — Inbound, Outbound, Di Gudang (unik, tidak redundan) */}
+      {/* KPI Grid — Pending > In Gudang > Siap Kirim */}
       <div className="grid grid-cols-3 gap-3">
-        {kpis.slice(0, 3).map((k, i) => (
+        {kpis.map((k, i) => (
           <motion.div
             key={k.label}
             initial={{ opacity: 0, y: 16 }}
@@ -139,8 +140,21 @@ export default function ClientDashboardPage() {
                     <p className="truncate text-sm font-semibold text-gray-800 dark:text-gray-100">{item.item_name}</p>
                     <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">
                       {item.consignee?.name || "—"}
-                      {item.block_location ? ` • ${item.block_location}` : ""}
+                      {item.block_location ? ` • Lokasi: ${item.block_location}` : ""}
                     </p>
+                    {/* Manifest + Pos */}
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {item.asn?.asn_number && (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
+                          <FileText className="h-3 w-3" /> {item.asn.asn_number}
+                        </span>
+                      )}
+                      {item.pos_number && (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-white/10 dark:text-gray-300">
+                          <Grid3x3 className="h-3 w-3" /> POS {item.pos_number}
+                        </span>
+                      )}
+                    </div>
                     <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">{timeAgo(item.updated_at)}</p>
                   </div>
                   <div className="text-right">

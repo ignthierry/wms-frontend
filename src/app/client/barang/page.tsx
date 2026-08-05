@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Package, Search } from "lucide-react";
+import { Package, Search, FileText, Grid3x3 } from "lucide-react";
 import { apiBase, authHeaders, statusLabel, statusColor, timeAgo, fmtIDR } from "@/components/client/api";
 
 const STATUS_FILTERS = [
@@ -17,6 +17,7 @@ interface Item {
   id: number;
   item_name: string;
   item_code: string;
+  pos_number: string | null;
   qty_expected: number;
   status: string;
   block_location: string | null;
@@ -24,6 +25,7 @@ interface Item {
   updated_at: string;
   consignee?: { name: string };
   invoice?: { total_amount: number | null; status: string } | null;
+  asn?: { asn_number: string; no_container: string | null; no_master_bl: string | null } | null;
 }
 
 export default function ClientItemsPage() {
@@ -32,6 +34,8 @@ export default function ClientItemsPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+  const [manifest, setManifest] = useState("");
+  const [manifests, setManifests] = useState<{ asn_number: string; label: string }[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [total, setTotal] = useState(0);
@@ -42,6 +46,7 @@ export default function ClientItemsPage() {
       setLoading(true);
       const params = new URLSearchParams({ per_page: "15", page: String(nextPage) });
       if (status) params.set("status", status);
+      if (manifest) params.set("manifest", manifest);
       if (search) params.set("search", search);
       const res = await fetch(`${apiBase}/client/items?${params}`, { headers: authHeaders() });
       if (!res.ok) throw new Error("Gagal memuat barang");
@@ -55,12 +60,25 @@ export default function ClientItemsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, status, page]);
+  }, [search, status, manifest, page]);
 
   useEffect(() => {
     fetchItems(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, search]);
+  }, [status, search, manifest]);
+
+  // Load daftar manifest untuk filter dropdown
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${apiBase}/client/manifests`, { headers: authHeaders() });
+        if (res.ok) {
+          const d = await res.json();
+          setManifests(d.data || []);
+        }
+      } catch { /* abaikan */ }
+    })();
+  }, []);
 
   const doSearch = () => fetchItems(true);
 
@@ -89,6 +107,20 @@ export default function ClientItemsPage() {
         >
           Cari
         </button>
+      </div>
+
+      {/* Manifest Filter */}
+      <div>
+        <select
+          value={manifest}
+          onChange={(e) => setManifest(e.target.value)}
+          className="w-full rounded-xl border border-brand-100 bg-white px-3 py-2.5 text-sm text-gray-800 shadow-sm outline-none transition focus:border-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-gray-100"
+        >
+          <option value="">Semua Manifest (ASN)</option>
+          {manifests.map((m) => (
+            <option key={m.asn_number} value={m.asn_number}>{m.label}</option>
+          ))}
+        </select>
       </div>
 
       {/* Status Filter Chips */}
@@ -144,6 +176,19 @@ export default function ClientItemsPage() {
                       {item.item_code || "—"}
                       {item.block_location ? ` • Lokasi: ${item.block_location}` : ""}
                     </p>
+                    {/* Manifest + Pos */}
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {item.asn?.asn_number && (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
+                          <FileText className="h-3 w-3" /> {item.asn.asn_number}
+                        </span>
+                      )}
+                      {item.pos_number && (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-white/10 dark:text-gray-300">
+                          <Grid3x3 className="h-3 w-3" /> POS {item.pos_number}
+                        </span>
+                      )}
+                    </div>
                     <p className="mt-0.5 text-[11px] text-gray-400 dark:text-gray-500">
                       {item.consignee?.name || "—"} • {timeAgo(item.updated_at)}
                     </p>
