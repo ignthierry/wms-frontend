@@ -36,8 +36,11 @@ export default function SignInForm() {
         Cookies.set("auth_token", data.access_token, { expires: isChecked ? 7 : 1 });
         if (data.user) {
           localStorage.setItem("user", JSON.stringify(data.user));
+          // Simpan role ke cookie supaya middleware bisa redirect role-based
+          const role = data.user.role?.role_name || "";
+          Cookies.set("user_role", role, { expires: isChecked ? 7 : 1 });
         }
-        window.location.href = "/";
+        window.location.href = (data.user?.role?.role_name === "forwarding") ? "/client" : "/";
       } else {
         setError(data.message || "Login failed");
         setIsLoading(false);
