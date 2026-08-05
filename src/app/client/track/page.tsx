@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { ScanLine, Search, Package, MapPin, FileText, History, ImageIcon } from "lucide-react";
 import { apiBase, authHeaders, statusLabel, statusColor, fullIDR, photoUrl } from "@/components/client/api";
 
@@ -38,25 +39,25 @@ export default function ClientTrackPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold">Lacak Barang</h1>
-        <p className="mt-0.5 text-sm text-gray-400">Scan QR atau masukkan nomor referensi</p>
+        <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">Lacak Barang</h1>
+        <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Scan QR atau masukkan nomor referensi</p>
       </div>
 
       {/* Input */}
       <form onSubmit={track} className="flex gap-2">
         <div className="relative flex-1">
-          <ScanLine className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+          <ScanLine className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             placeholder="QR / kode barang / Host BL..."
-            className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-3 text-sm outline-none transition placeholder:text-gray-500 focus:border-brand-500/50 focus:bg-white/[0.07]"
+            className="w-full rounded-xl border border-brand-100 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-800 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-white/10 dark:bg-white/5 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-brand-500/50"
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white transition active:scale-95 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-md shadow-brand-600/25 transition hover:bg-brand-700 active:scale-95 disabled:opacity-50"
         >
           <Search className="h-4 w-4" /> Lacak
         </button>
@@ -64,27 +65,33 @@ export default function ClientTrackPage() {
 
       {loading && (
         <div className="flex h-32 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
         </div>
       )}
 
       {error && (
-        <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-5 text-center text-sm text-rose-300">{error}</div>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-center text-sm text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300"
+        >
+          {error}
+        </motion.div>
       )}
 
       {result && sc && (
-        <div className="space-y-4">
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-4">
           {/* Result Header */}
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-brand-500/15 via-transparent to-transparent p-5">
-            <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-brand-500/10 blur-2xl" />
+          <div className="relative overflow-hidden rounded-3xl border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-white p-5 shadow-sm dark:border-white/10 dark:from-brand-500/15 dark:via-transparent dark:to-transparent">
+            <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-brand-200/40 blur-2xl dark:bg-brand-500/10" />
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="text-lg font-bold leading-snug">{result.item_name}</h2>
-                <p className="mt-1 flex items-center gap-1.5 text-xs text-gray-400">
+                <h2 className="text-lg font-bold leading-snug text-gray-800 dark:text-gray-100">{result.item_name}</h2>
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                   <MapPin className="h-3.5 w-3.5" />
                   {result.block_location || "Lokasi belum ditentukan"}
                 </p>
-                <p className="mt-1 text-[11px] text-gray-500">{result.consignee?.name}</p>
+                <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">{result.consignee?.name}</p>
               </div>
               <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${sc.bg} ${sc.text}`}>
                 <span className={`h-1.5 w-1.5 rounded-full ${sc.dot}`} />
@@ -95,49 +102,49 @@ export default function ClientTrackPage() {
 
           {/* Quick info */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
-              <p className="text-[11px] text-gray-500">Kode Barang</p>
-              <p className="mt-1 break-words text-sm font-semibold">{result.item_code || "—"}</p>
+            <div className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm dark:border-white/5 dark:bg-white/[0.03]">
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">Kode Barang</p>
+              <p className="mt-1 break-words text-sm font-semibold text-gray-800 dark:text-gray-100">{result.item_code || "—"}</p>
             </div>
-            <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
-              <p className="text-[11px] text-gray-500">Kuantitas</p>
-              <p className="mt-1 text-sm font-semibold">{result.qty_expected ? `${result.qty_expected} pos` : "—"}</p>
+            <div className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm dark:border-white/5 dark:bg-white/[0.03]">
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">Kuantitas</p>
+              <p className="mt-1 text-sm font-semibold text-gray-800 dark:text-gray-100">{result.qty_expected ? `${result.qty_expected} pos` : "—"}</p>
             </div>
           </div>
 
           {/* Invoice */}
           {result.invoice && (
-            <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
-              <p className="flex items-center gap-1.5 text-[11px] text-gray-500">
+            <div className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm dark:border-white/5 dark:bg-white/[0.03]">
+              <p className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
                 <FileText className="h-3.5 w-3.5" /> Invoice
               </p>
               <div className="mt-1.5 flex items-center justify-between">
-                <p className="text-xs text-gray-400">{result.invoice.invoice_number || "—"}</p>
-                <p className="text-sm font-bold">{fullIDR(result.invoice.total_amount)}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{result.invoice.invoice_number || "—"}</p>
+                <p className="text-sm font-bold text-gray-800 dark:text-gray-100">{fullIDR(result.invoice.total_amount)}</p>
               </div>
             </div>
           )}
 
           {/* Photos */}
           {photos.length > 0 && (
-            <div className="rounded-3xl border border-white/5 bg-white/[0.03] p-5">
-              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-300">
-                <ImageIcon className="h-4 w-4 text-brand-400" /> Dokumentasi
+            <div className="rounded-3xl border border-brand-100 bg-white p-5 shadow-sm dark:border-white/5 dark:bg-white/[0.03]">
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <ImageIcon className="h-4 w-4 text-brand-600 dark:text-brand-400" /> Dokumentasi
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 {photos.map((p: any) => {
                   const url = photoUrl(p.photo_proof);
                   return (
-                    <div key={p.id} className="overflow-hidden rounded-2xl bg-black/30">
+                    <div key={p.id} className="overflow-hidden rounded-2xl bg-brand-50 dark:bg-black/30">
                       {url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={url} alt={p.jenis_foto || "foto"} className="aspect-square w-full object-cover" />
                       ) : (
-                        <div className="flex aspect-square w-full items-center justify-center text-gray-600">
+                        <div className="flex aspect-square w-full items-center justify-center text-gray-400 dark:text-gray-600">
                           <ImageIcon className="h-6 w-6" />
                         </div>
                       )}
-                      <p className="px-2 py-1 text-center text-[10px] font-medium text-gray-400">
+                      <p className="px-2 py-1 text-center text-[10px] font-medium text-gray-500 dark:text-gray-400">
                         {p.jenis_foto === "in" ? "Inbound" : p.jenis_foto === "out" ? "Outbound" : "Foto"}
                       </p>
                     </div>
@@ -148,21 +155,21 @@ export default function ClientTrackPage() {
           )}
 
           {/* Timeline */}
-          <div className="rounded-3xl border border-white/5 bg-white/[0.03] p-5">
-            <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-300">
-              <History className="h-4 w-4 text-brand-400" /> Riwayat Pergerakan
+          <div className="rounded-3xl border border-brand-100 bg-white p-5 shadow-sm dark:border-white/5 dark:bg-white/[0.03]">
+            <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <History className="h-4 w-4 text-brand-600 dark:text-brand-400" /> Riwayat Pergerakan
             </h3>
             {shirts.length === 0 ? (
               <p className="text-sm text-gray-500">Belum ada riwayat.</p>
             ) : (
-              <div className="relative ml-1 space-y-5 border-l border-white/10 pl-5">
+              <div className="relative ml-1 space-y-5 border-l border-brand-100 pl-5 dark:border-white/10">
                 {shirts.map((h: any) => (
                   <div key={h.id} className="relative">
-                    <span className="absolute -left-[26px] top-1 h-3 w-3 rounded-full border-2 border-[#0a0e1a] bg-brand-500" />
-                    <p className="text-sm font-semibold text-gray-200">{h.description || h.action}</p>
+                    <span className="absolute -left-[26px] top-1 h-3 w-3 rounded-full border-2 border-white bg-brand-500 dark:border-[#0a0e1a]" />
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{h.description || h.action}</p>
                     <div className="mt-1 flex items-center gap-2 text-xs">
-                      <span className="inline-flex rounded-md bg-brand-500/15 px-2 py-0.5 font-semibold text-brand-300">{h.action}</span>
-                      <span className="text-gray-500">
+                      <span className="inline-flex rounded-md bg-brand-50 px-2 py-0.5 font-semibold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">{h.action}</span>
+                      <span className="text-gray-400 dark:text-gray-500">
                         {h.created_at ? new Date(h.created_at.replace(" ", "T")).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }) : ""}
                       </span>
                     </div>
@@ -171,16 +178,26 @@ export default function ClientTrackPage() {
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {!result && !loading && !error && (
-        <div className="flex flex-col items-center gap-3 rounded-3xl border border-dashed border-white/10 p-10 text-center">
-          <Package className="h-10 w-10 text-gray-600" />
-          <p className="text-sm text-gray-500">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="flex flex-col items-center gap-3 rounded-3xl border border-dashed border-brand-200 bg-white/50 p-10 text-center dark:border-white/10 dark:bg-transparent"
+        >
+          <motion.div
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Package className="h-10 w-10 text-brand-300 dark:text-gray-600" />
+          </motion.div>
+          <p className="text-sm text-gray-500 dark:text-gray-500">
             Masukkan nomor QR / kode barang / Host BL untuk melihat status terbaru barang Anda.
           </p>
-        </div>
+        </motion.div>
       )}
     </div>
   );

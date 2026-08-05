@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Package, ArrowDownToLine, ArrowUpFromLine, MapPin, FileWarning, ChevronRight, Boxes } from "lucide-react";
 import { apiBase, authHeaders, statusLabel, statusColor, timeAgo, fmtIDR } from "@/components/client/api";
+import WarehouseBanner from "@/components/client/WarehouseBanner";
 
 interface Item {
   id: number;
@@ -38,16 +40,16 @@ export default function ClientDashboardPage() {
   if (loading) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-3">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-        <p className="text-sm text-gray-400">Memuat dashboard...</p>
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+        <p className="text-sm text-gray-500">Memuat dashboard...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-5 text-center">
-        <p className="text-sm font-medium text-rose-300">{error}</p>
+      <div className="rounded-2xl border border-rose-500/20 bg-rose-50 p-5 text-center dark:bg-rose-500/10">
+        <p className="text-sm font-medium text-rose-600 dark:text-rose-300">{error}</p>
       </div>
     );
   }
@@ -55,61 +57,67 @@ export default function ClientDashboardPage() {
   const m = data?.metrics || {};
   const consignees = data?.consignees || [];
   const items = data?.recent_items || [];
+  const userName = data?.consignees?.[0]?.name || "";
 
   const kpis = [
-    { label: "Total Barang", value: m.total_items ?? 0, icon: Boxes, color: "text-brand-400 bg-brand-500/10 border-brand-500/20" },
-    { label: "Inbound", value: m.inbound ?? 0, icon: ArrowDownToLine, color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
-    { label: "Outbound", value: m.outbound ?? 0, icon: ArrowUpFromLine, color: "text-violet-400 bg-violet-500/10 border-violet-500/20" },
-    { label: "Di Gudang", value: m.in_warehouse ?? 0, icon: MapPin, color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
+    { label: "Total Barang", value: m.total_items ?? 0, icon: Boxes, color: "text-brand-600 bg-brand-50 border-brand-200 dark:text-brand-400 dark:bg-brand-500/10 dark:border-brand-500/20" },
+    { label: "Inbound", value: m.inbound ?? 0, icon: ArrowDownToLine, color: "text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20" },
+    { label: "Outbound", value: m.outbound ?? 0, icon: ArrowUpFromLine, color: "text-violet-600 bg-violet-50 border-violet-200 dark:text-violet-400 dark:bg-violet-500/10 dark:border-violet-500/20" },
+    { label: "Di Gudang", value: m.in_warehouse ?? 0, icon: MapPin, color: "text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/20" },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Greeting */}
-      <div>
-        <h1 className="text-xl font-bold">Halo, 👋</h1>
-        <p className="mt-0.5 text-sm text-gray-400">Pantau pergerakan barang Anda di gudang.</p>
-      </div>
+      {/* Banner Hero */}
+      <WarehouseBanner name={userName} totalItems={m.total_items ?? 0} unpaidInvoices={m.unpaid_invoices ?? 0} />
 
       {/* KPI Grid */}
       <div className="grid grid-cols-2 gap-3">
-        {kpis.map((k) => (
-          <div key={k.label} className={`rounded-2xl border ${k.color} p-4 backdrop-blur`}>
+        {kpis.map((k, i) => (
+          <motion.div
+            key={k.label}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 + i * 0.08, duration: 0.4 }}
+            className={`rounded-2xl border ${k.color} p-4 backdrop-blur`}
+          >
             <div className="flex items-center justify-between">
               <span className="text-2xl font-extrabold">{k.value}</span>
               <k.icon className="h-5 w-5 opacity-80" />
             </div>
-            <p className="mt-1 text-xs font-medium text-gray-400">{k.label}</p>
-          </div>
+            <p className="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">{k.label}</p>
+          </motion.div>
         ))}
       </div>
 
       {/* Alert Invoice */}
       {(m.unpaid_invoices ?? 0) > 0 && (
-        <Link
-          href="/client/invoice"
-          className="flex items-center justify-between rounded-2xl border border-rose-500/25 bg-gradient-to-r from-rose-500/15 to-orange-500/10 p-4 transition active:scale-[0.98]"
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/20">
-              <FileWarning className="h-5 w-5 text-rose-400" />
+        <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.4 }}>
+          <Link
+            href="/client/invoice"
+            className="flex items-center justify-between rounded-2xl border border-rose-200 bg-gradient-to-r from-rose-50 to-orange-50 p-4 shadow-sm transition hover:shadow-md active:scale-[0.98] dark:border-rose-500/25 dark:from-rose-500/15 dark:to-orange-500/10"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/15">
+                <FileWarning className="h-5 w-5 text-rose-500 dark:text-rose-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-rose-600 dark:text-rose-200">{m.unpaid_invoices} invoice belum dibayar</p>
+                <p className="text-xs text-rose-500/70 dark:text-rose-300/70">Klik untuk melihat detail tagihan</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold text-rose-200">{m.unpaid_invoices} invoice belum dibayar</p>
-              <p className="text-xs text-rose-300/70">Klik untuk melihat detail tagihan</p>
-            </div>
-          </div>
-          <ChevronRight className="h-5 w-5 text-rose-300" />
-        </Link>
+            <ChevronRight className="h-5 w-5 text-rose-400 dark:text-rose-300" />
+          </Link>
+        </motion.div>
       )}
 
       {/* Consignee Chips */}
       {consignees.length > 0 && (
         <div>
-          <h2 className="mb-2 text-sm font-semibold text-gray-300">Consignee Anda</h2>
+          <h2 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">Consignee Anda</h2>
           <div className="flex flex-wrap gap-2">
             {consignees.map((c: any) => (
-              <span key={c.id} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-gray-300">
+              <span key={c.id} className="rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
                 {c.name}
               </span>
             ))}
@@ -120,46 +128,52 @@ export default function ClientDashboardPage() {
       {/* Recent Items */}
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-gray-300">Barang Terbaru</h2>
-          <Link href="/client/barang" className="flex items-center gap-0.5 text-xs font-medium text-brand-400">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Barang Terbaru</h2>
+          <Link href="/client/barang" className="flex items-center gap-0.5 text-xs font-medium text-brand-600 dark:text-brand-400">
             Lihat semua <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
         <div className="space-y-2.5">
           {items.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-white/10 p-6 text-center text-sm text-gray-500">
+            <div className="rounded-2xl border border-dashed border-brand-200 p-6 text-center text-sm text-gray-500 dark:border-white/10">
               Belum ada barang.
             </div>
           )}
-          {items.map((item: Item) => {
+          {items.map((item: Item, i: number) => {
             const sc = statusColor(item.status);
             return (
-              <Link
+              <motion.div
                 key={item.id}
-                href={`/client/barang/${item.id}`}
-                className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.03] p-3.5 transition active:scale-[0.98]"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.05, duration: 0.3 }}
               >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/20 to-brand-700/10">
-                  <Package className="h-5 w-5 text-brand-300" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{item.item_name}</p>
-                  <p className="mt-0.5 truncate text-xs text-gray-400">
-                    {item.consignee?.name || "—"}
-                    {item.block_location ? ` • ${item.block_location}` : ""}
-                  </p>
-                  <p className="mt-1 text-[11px] text-gray-500">{timeAgo(item.updated_at)}</p>
-                </div>
-                <div className="text-right">
-                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold ${sc.bg} ${sc.text}`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${sc.dot}`} />
-                    {statusLabel(item.status)}
-                  </span>
-                  {item.invoice && (
-                    <p className="mt-1 text-[11px] font-semibold text-gray-400">{fmtIDR(item.invoice.total_amount)}</p>
-                  )}
-                </div>
-              </Link>
+                <Link
+                  href={`/client/barang/${item.id}`}
+                  className="flex items-center gap-3 rounded-2xl border border-brand-100 bg-white p-3.5 shadow-sm transition hover:shadow-md active:scale-[0.98] dark:border-white/5 dark:bg-white/[0.03]"
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-500/20 dark:to-brand-700/10">
+                    <Package className="h-5 w-5 text-brand-600 dark:text-brand-300" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-gray-800 dark:text-gray-100">{item.item_name}</p>
+                    <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">
+                      {item.consignee?.name || "—"}
+                      {item.block_location ? ` • ${item.block_location}` : ""}
+                    </p>
+                    <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">{timeAgo(item.updated_at)}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold ${sc.bg} ${sc.text}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${sc.dot}`} />
+                      {statusLabel(item.status)}
+                    </span>
+                    {item.invoice && (
+                      <p className="mt-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400">{fmtIDR(item.invoice.total_amount)}</p>
+                    )}
+                  </div>
+                </Link>
+              </motion.div>
             );
           })}
         </div>
