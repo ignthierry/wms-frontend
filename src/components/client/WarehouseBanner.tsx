@@ -3,7 +3,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Package, Truck, ArrowRight, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Package, Truck, Sparkles } from "lucide-react";
 
 interface WarehouseBannerProps {
   name?: string;
@@ -12,8 +13,8 @@ interface WarehouseBannerProps {
 }
 
 /**
- * Banner hero bergaya native mobile app — ilustrasi warehouse, animasi
- * mengambang, karakter robot/kurir, dan statistik ringkas.
+ * Banner hero bergaya native mobile app — ilustrasi warehouse full-cover,
+ * animasi mengambang, karakter robot/kurir, dan statistik klikable.
  */
 export default function WarehouseBanner({ name, totalItems = 0, unpaidInvoices = 0 }: WarehouseBannerProps) {
   return (
@@ -21,10 +22,10 @@ export default function WarehouseBanner({ name, totalItems = 0, unpaidInvoices =
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="relative overflow-hidden rounded-3xl border border-brand-200/60 bg-gradient-to-br from-brand-600 via-brand-700 to-brand-900 shadow-xl shadow-brand-700/20 dark:border-white/10 dark:from-brand-800 dark:via-brand-900 dark:to-[#0d1220]"
+      className="relative overflow-hidden rounded-3xl border border-brand-200/60 shadow-xl shadow-brand-700/20 dark:border-white/10"
     >
-      {/* Background illustration */}
-      <div className="pointer-events-none absolute inset-0 opacity-30">
+      {/* Background illustration — FULL COVER, tanpa gap */}
+      <div className="pointer-events-none absolute inset-0">
         <Image
           src="/images/warehouse.png"
           alt=""
@@ -32,7 +33,11 @@ export default function WarehouseBanner({ name, totalItems = 0, unpaidInvoices =
           sizes="(max-width: 512px) 100vw, 512px"
           className="object-cover object-center"
           unoptimized
+          priority
         />
+        {/* Gradient overlay agar teks tetap terbaca, gambar tetap penuh */}
+        <div className="absolute inset-0 bg-gradient-to-b from-brand-900/85 via-brand-800/45 to-brand-900/90" />
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-900/60 via-transparent to-brand-900/40" />
       </div>
 
       {/* Animated glow orbs */}
@@ -126,14 +131,17 @@ export default function WarehouseBanner({ name, totalItems = 0, unpaidInvoices =
           </p>
         </motion.div>
 
-        {/* Stats row */}
+        {/* Stats row — KLIKABLE, ganti redundansi di bawah */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
           className="mt-4 grid grid-cols-2 gap-2.5"
         >
-          <div className="flex items-center gap-2.5 rounded-2xl bg-white/10 p-3 backdrop-blur-md">
+          <Link
+            href="/client/barang"
+            className="flex items-center gap-2.5 rounded-2xl bg-white/10 p-3 backdrop-blur-md transition hover:bg-white/20 active:scale-[0.97]"
+          >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15">
               <Package className="h-4.5 w-4.5 text-white" />
             </div>
@@ -141,8 +149,11 @@ export default function WarehouseBanner({ name, totalItems = 0, unpaidInvoices =
               <p className="text-lg font-extrabold leading-none text-white">{totalItems}</p>
               <p className="mt-0.5 text-[10px] font-medium text-brand-100/80">Total Barang</p>
             </div>
-          </div>
-          <div className="flex items-center gap-2.5 rounded-2xl bg-white/10 p-3 backdrop-blur-md">
+          </Link>
+          <Link
+            href="/client/invoice"
+            className="flex items-center gap-2.5 rounded-2xl bg-white/10 p-3 backdrop-blur-md transition hover:bg-white/20 active:scale-[0.97]"
+          >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-500/30">
               <span className="text-base">📦</span>
             </div>
@@ -150,7 +161,7 @@ export default function WarehouseBanner({ name, totalItems = 0, unpaidInvoices =
               <p className="text-lg font-extrabold leading-none text-white">{unpaidInvoices}</p>
               <p className="mt-0.5 text-[10px] font-medium text-brand-100/80">Invoice Belum Bayar</p>
             </div>
-          </div>
+          </Link>
         </motion.div>
       </div>
 

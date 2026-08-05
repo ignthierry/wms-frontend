@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Package, ArrowDownToLine, ArrowUpFromLine, MapPin, FileWarning, ChevronRight, Boxes } from "lucide-react";
+import { Package, ArrowDownToLine, ArrowUpFromLine, MapPin, Boxes, ChevronRight } from "lucide-react";
 import { apiBase, authHeaders, statusLabel, statusColor, timeAgo, fmtIDR } from "@/components/client/api";
 import WarehouseBanner from "@/components/client/WarehouseBanner";
 
@@ -59,11 +59,12 @@ export default function ClientDashboardPage() {
   const items = data?.recent_items || [];
   const userName = data?.consignees?.[0]?.name || "";
 
+  // Hanya KPI yang TIDAK ada di banner (Total Barang & Invoice Belum Bayar sudah di banner)
   const kpis = [
-    { label: "Total Barang", value: m.total_items ?? 0, icon: Boxes, color: "text-brand-600 bg-brand-50 border-brand-200 dark:text-brand-400 dark:bg-brand-500/10 dark:border-brand-500/20" },
     { label: "Inbound", value: m.inbound ?? 0, icon: ArrowDownToLine, color: "text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20" },
     { label: "Outbound", value: m.outbound ?? 0, icon: ArrowUpFromLine, color: "text-violet-600 bg-violet-50 border-violet-200 dark:text-violet-400 dark:bg-violet-500/10 dark:border-violet-500/20" },
     { label: "Di Gudang", value: m.in_warehouse ?? 0, icon: MapPin, color: "text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/20" },
+    { label: "Total Barang", value: m.total_items ?? 0, icon: Boxes, color: "text-brand-600 bg-brand-50 border-brand-200 dark:text-brand-400 dark:bg-brand-500/10 dark:border-brand-500/20" },
   ];
 
   return (
@@ -71,9 +72,9 @@ export default function ClientDashboardPage() {
       {/* Banner Hero */}
       <WarehouseBanner name={userName} totalItems={m.total_items ?? 0} unpaidInvoices={m.unpaid_invoices ?? 0} />
 
-      {/* KPI Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        {kpis.map((k, i) => (
+      {/* KPI Grid — Inbound, Outbound, Di Gudang (unik, tidak redundan) */}
+      <div className="grid grid-cols-3 gap-3">
+        {kpis.slice(0, 3).map((k, i) => (
           <motion.div
             key={k.label}
             initial={{ opacity: 0, y: 16 }}
@@ -89,27 +90,6 @@ export default function ClientDashboardPage() {
           </motion.div>
         ))}
       </div>
-
-      {/* Alert Invoice */}
-      {(m.unpaid_invoices ?? 0) > 0 && (
-        <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.4 }}>
-          <Link
-            href="/client/invoice"
-            className="flex items-center justify-between rounded-2xl border border-rose-200 bg-gradient-to-r from-rose-50 to-orange-50 p-4 shadow-sm transition hover:shadow-md active:scale-[0.98] dark:border-rose-500/25 dark:from-rose-500/15 dark:to-orange-500/10"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/15">
-                <FileWarning className="h-5 w-5 text-rose-500 dark:text-rose-400" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-rose-600 dark:text-rose-200">{m.unpaid_invoices} invoice belum dibayar</p>
-                <p className="text-xs text-rose-500/70 dark:text-rose-300/70">Klik untuk melihat detail tagihan</p>
-              </div>
-            </div>
-            <ChevronRight className="h-5 w-5 text-rose-400 dark:text-rose-300" />
-          </Link>
-        </motion.div>
-      )}
 
       {/* Consignee Chips */}
       {consignees.length > 0 && (
