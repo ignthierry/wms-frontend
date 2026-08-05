@@ -20,6 +20,12 @@ const NAV = [
   { href: "/client/track", label: "Lacak", icon: ScanLine },
 ];
 
+/** Menentukan apakah menu aktif berdasarkan pathname (termasuk sub-halaman) */
+function isActive(pathname: string, href: string): boolean {
+  if (href === "/client") return pathname === "/client";
+  return pathname === href || pathname.startsWith(href + "/");
+}
+
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -40,7 +46,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a] text-gray-100 pb-20 md:pb-0">
+    <div className="min-h-screen bg-[#0a0e1a] text-gray-100 pb-20">
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-white/5 bg-[#0a0e1a]/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
@@ -68,21 +74,44 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       {/* Content */}
       <main className="mx-auto max-w-lg px-4 py-5">{children}</main>
 
-      {/* Bottom Nav (mobile) */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#0d1220]/95 backdrop-blur-xl md:hidden">
+      {/* Bottom Navigation — tampil di semua ukuran layar, mobile-app UX */}
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#0d1220]/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-lg items-stretch justify-between px-2 pb-[env(safe-area-inset-bottom)]">
           {NAV.map((item) => {
-            const active = pathname === item.href;
+            const active = isActive(pathname, item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-1 flex-col items-center gap-1 py-2.5 transition ${
+                aria-current={active ? "page" : undefined}
+                className={`group relative flex flex-1 flex-col items-center gap-1 pt-2.5 pb-2 transition ${
                   active ? "text-brand-400" : "text-gray-500 hover:text-gray-300"
                 }`}
               >
-                <item.icon className={`h-5 w-5 ${active ? "drop-shadow-[0_0_6px_rgba(96,165,250,0.6)]" : ""}`} />
-                <span className="text-[10px] font-medium">{item.label}</span>
+                {/* Active indicator bar */}
+                <span
+                  className={`absolute top-0 left-1/2 h-1 w-8 -translate-x-1/2 rounded-b-full transition-all ${
+                    active
+                      ? "bg-gradient-to-r from-brand-400 to-brand-300 shadow-[0_0_8px_rgba(96,165,250,0.8)]"
+                      : "bg-transparent"
+                  }`}
+                />
+                <span
+                  className={`flex h-7 w-12 items-center justify-center rounded-full transition ${
+                    active
+                      ? "bg-brand-500/15 text-brand-400"
+                      : "group-hover:bg-white/5"
+                  }`}
+                >
+                  <item.icon
+                    className={`h-5 w-5 ${active ? "drop-shadow-[0_0_6px_rgba(96,165,250,0.6)]" : ""}`}
+                  />
+                </span>
+                <span
+                  className={`text-[10px] font-medium ${active ? "text-brand-300" : ""}`}
+                >
+                  {item.label}
+                </span>
               </Link>
             );
           })}
