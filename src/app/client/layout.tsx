@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import Cookies from "js-cookie";
 import {
   LayoutDashboard,
@@ -101,45 +102,47 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       {/* Content */}
       <main className="mx-auto max-w-lg px-4 py-5">{children}</main>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-brand-100 bg-white/95 backdrop-blur-xl transition-colors dark:border-white/10 dark:bg-[#0d1220]/95">
-        <div className="mx-auto flex max-w-lg items-stretch justify-between px-2 pb-[env(safe-area-inset-bottom)]">
-          {NAV.map((item) => {
-            const active = isActive(pathname, item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={active ? "page" : undefined}
-                className={`group relative flex flex-1 flex-col items-center gap-1 pt-2.5 pb-2 transition ${
-                  active ? "text-brand-600 dark:text-brand-400" : "text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-                }`}
-              >
-                {/* Active indicator bar */}
-                <span
-                  className={`absolute top-0 left-1/2 h-1 w-8 -translate-x-1/2 rounded-b-full transition-all ${
-                    active
-                      ? "bg-gradient-to-r from-brand-500 to-orange-500 shadow-[0_0_8px_rgba(30,58,138,0.5)]"
-                      : "bg-transparent"
-                  }`}
-                />
-                <span
-                  className={`flex h-7 w-12 items-center justify-center rounded-full transition ${
-                    active
-                      ? "bg-brand-500/10 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400"
-                      : "group-hover:bg-brand-50 dark:group-hover:bg-white/5"
+      {/* Bottom Navigation — curved floating pill, glassmorphism, animated indicator */}
+      <nav className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)]">
+        {/* Background blur layer di belakang pill */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[72px]" />
+        <div className="relative mx-auto max-w-lg overflow-hidden rounded-[28px] border border-white/50 bg-white/60 shadow-[0_-8px_40px_rgba(30,58,138,0.12)] backdrop-blur-2xl transition-colors dark:border-white/10 dark:bg-[#111827]/70 dark:shadow-[0_-8px_40px_rgba(0,0,0,0.5)]">
+          {/* Glass top highlight line */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/20" />
+          <div className="relative flex items-stretch justify-between px-3">
+            {NAV.map((item) => {
+              const active = isActive(pathname, item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`group relative flex flex-1 flex-col items-center gap-1 py-3 transition ${
+                    active ? "text-brand-600 dark:text-brand-400" : "text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                   }`}
                 >
-                  <item.icon
-                    className={`h-5 w-5 ${active ? "drop-shadow-[0_0_6px_rgba(30,58,138,0.35)]" : ""}`}
-                  />
-                </span>
-                <span className={`text-[10px] font-medium ${active ? "text-brand-600 dark:text-brand-300" : ""}`}>
-                  {item.label}
-                </span>
-              </Link>
-            );
-          })}
+                  {/* Icon pill with animated active background */}
+                  <span className="relative flex h-9 w-14 items-center justify-center">
+                    {active && (
+                      <motion.span
+                        layoutId="navActivePill"
+                        className="absolute inset-0 rounded-full bg-gradient-to-br from-brand-500/20 to-orange-500/15 dark:from-brand-500/25 dark:to-orange-500/20"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    <item.icon
+                      className={`relative h-6 w-6 transition-transform duration-300 ${
+                        active ? "scale-110 drop-shadow-[0_0_8px_rgba(30,58,138,0.4)] dark:drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" : "group-hover:scale-105"
+                      }`}
+                    />
+                  </span>
+                  <span className={`text-[10px] font-semibold ${active ? "text-brand-600 dark:text-brand-300" : ""}`}>
+                    {item.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </nav>
     </div>
