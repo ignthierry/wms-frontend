@@ -285,7 +285,7 @@ export default function LaporanDashboardPage() {
                 {Object.entries(data.status_inbound || {}).map(([name, value], i) => (
                   <span key={name} className="flex items-center gap-1.5 text-[11px] text-gray-600 dark:text-gray-300">
                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
-                    {name.replace(/_/g, " ").toLowerCase()} ({value})
+                    {name.replace(/_/g, " ").toLowerCase()} ({value as number})
                   </span>
                 ))}
               </div>
