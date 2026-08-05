@@ -126,7 +126,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                     {active && (
                       <motion.span
                         layoutId="navActivePill"
-                        className="absolute inset-0 rounded-full bg-gradient-to-br from-brand-500/20 to-orange-500/15 dark:from-brand-500/25 dark:to-orange-500/20"
+                        className="absolute inset-0 rounded-full bg-gradient-to-br from-brand-500/25 via-brand-500/15 to-orange-500/20 ring-1 ring-brand-400/30 dark:from-brand-400/30 dark:to-orange-400/25 dark:ring-brand-300/30"
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       />
                     )}
