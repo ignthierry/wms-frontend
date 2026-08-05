@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import Cookies from "js-cookie";
 import {
   LayoutDashboard,
@@ -102,47 +101,40 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       {/* Content */}
       <main className="mx-auto max-w-lg px-4 py-5">{children}</main>
 
-      {/* Bottom Navigation — curved floating pill, glassmorphism, animated indicator */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)]">
-        {/* Background blur layer di belakang pill */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[72px]" />
-        <div className="relative mx-auto max-w-lg overflow-hidden rounded-[28px] border border-white/50 bg-white/60 shadow-[0_-8px_40px_rgba(30,58,138,0.12)] backdrop-blur-2xl transition-colors dark:border-white/10 dark:bg-[#111827]/70 dark:shadow-[0_-8px_40px_rgba(0,0,0,0.5)]">
-          {/* Glass top highlight line */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/20" />
-          <div className="relative flex items-stretch justify-between px-3">
-            {NAV.map((item) => {
-              const active = isActive(pathname, item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={`group relative flex flex-1 flex-col items-center gap-1 py-3 transition ${
-                    active ? "text-brand-600 dark:text-brand-400" : "text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+      {/* Bottom Navigation — seragam dengan AppBottomBar admin panel (rounded-t-3xl, ikon aktif bubble naik) */}
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-brand-100 bg-white/95 backdrop-blur-xl transition-colors dark:border-white/10 dark:bg-[#0d1220]/95">
+        <div className="flex max-w-lg items-stretch justify-between px-4 pb-[env(safe-area-inset-bottom)] lg:mx-auto">
+          {NAV.map((item) => {
+            const active = isActive(pathname, item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className="group relative flex h-16 flex-1 flex-col items-center justify-center"
+              >
+                {/* Icon bubble — aktif: bubble naik, inaktif: icon kecil di tengah */}
+                <div
+                  className={`absolute flex items-center justify-center rounded-full transition-all duration-300 ease-out ${
+                    active
+                      ? "h-12 w-12 bg-gradient-to-br from-brand-500 to-brand-700 -translate-y-4 text-white shadow-lg shadow-brand-500/40 ring-4 ring-brand-50 dark:ring-gray-900"
+                      : "h-8 w-8 translate-y-[-8px] text-gray-400 group-hover:text-brand-500 group-hover:scale-110 dark:text-gray-500"
                   }`}
                 >
-                  {/* Icon pill with animated active background */}
-                  <span className="relative flex h-9 w-14 items-center justify-center">
-                    {active && (
-                      <motion.span
-                        layoutId="navActivePill"
-                        className="absolute inset-0 rounded-full bg-gradient-to-br from-brand-500/25 via-brand-500/15 to-orange-500/20 ring-1 ring-brand-400/30 dark:from-brand-400/30 dark:to-orange-400/25 dark:ring-brand-300/30"
-                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                      />
-                    )}
-                    <item.icon
-                      className={`relative h-6 w-6 transition-transform duration-300 ${
-                        active ? "scale-110 drop-shadow-[0_0_8px_rgba(30,58,138,0.4)] dark:drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" : "group-hover:scale-105"
-                      }`}
-                    />
-                  </span>
-                  <span className={`text-[10px] font-semibold ${active ? "text-brand-600 dark:text-brand-300" : ""}`}>
-                    {item.label}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
+                  <item.icon className="h-6 w-6" />
+                </div>
+                <span
+                  className={`absolute bottom-2.5 text-[10px] whitespace-nowrap transition-all duration-300 ${
+                    active
+                      ? "text-brand-600 font-bold opacity-100 dark:text-brand-400"
+                      : "text-gray-500 font-medium translate-y-1 group-hover:text-gray-700 dark:text-gray-400"
+                  }`}
+                >
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </nav>
     </div>
