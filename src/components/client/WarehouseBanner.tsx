@@ -35,9 +35,8 @@ export default function WarehouseBanner({ name, totalItems = 0, unpaidInvoices =
           unoptimized
           priority
         />
-        {/* Gradient overlay agar teks tetap terbaca, gambar tetap penuh */}
-        <div className="absolute inset-0 bg-gradient-to-b from-brand-900/85 via-brand-800/45 to-brand-900/90" />
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-900/60 via-transparent to-brand-900/40" />
+        {/* Overlay RINGAN agar ilustrasi warehouse tetap terlihat, teks tetap terbaca */}
+        <div className="absolute inset-0 bg-gradient-to-b from-brand-950/60 via-brand-900/15 to-brand-950/70" />
       </div>
 
       {/* Animated glow orbs */}
