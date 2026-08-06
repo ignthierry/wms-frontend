@@ -20,31 +20,71 @@ const fmt = (n: any) => new Intl.NumberFormat("id-ID", { style: "currency", curr
 export default function TruckingInvoicePage() {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [asns, setAsns] = useState<any[]>([]);
+  const [truckings, setTruckings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [invoiceMode, setInvoiceMode] = useState<"asn" | "standalone">("asn");
   const [selectedAsn, setSelectedAsn] = useState<any>(null);
   const [invoiceType, setInvoiceType] = useState("trucking");
   const [calc, setCalc] = useState<any>(null);
   const [isCalcLoading, setIsCalcLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  // Standalone form (tanpa ASN)
+  const [standForm, setStandForm] = useState({ trucking_company_id: "", trucking_fee: "", description: "" });
 
   const fetchAll = async () => {
     setIsLoading(true);
     try {
-      const [inv, asnRes] = await Promise.all([
+      const [inv, asnRes, trRes] = await Promise.all([
         fetch(`${apiUrl}/trucking-invoices`, { headers: headers() }),
         fetch(`${apiUrl}/asns`, { headers: headers() }),
+        fetch(`${apiUrl}/truckings`, { headers: headers() }),
       ]);
       const invData = await inv.json();
       const asnData = await asnRes.json();
+      const trData = await trRes.json();
       setInvoices(invData.data || invData);
       setAsns(asnData.data || asnData);
+      setTruckings(trData.data || trData);
     } catch (e) { console.error(e); } finally { setIsLoading(false); }
   };
 
   useEffect(() => { fetchAll(); }, []);
 
-  const openModal = () => { setIsModalOpen(true); setSelectedAsn(null); setCalc(null); setInvoiceType("trucking"); };
+  const openModal = () => {
+    setIsModalOpen(true);
+    setInvoiceMode("asn");
+    setSelectedAsn(null);
+    setCalc(null);
+    setInvoiceType("trucking");
+    setStandForm({ trucking_company_id: truckings[0]?.id || "", trucking_fee: "", description: "" });
+  };
+
+  const generateStandalone = async () => {
+    if (!standForm.trucking_company_id || !standForm.trucking_fee) {
+      Swal.fire("Lengkapi", "Pilih trucking dan isi fee jasa trucking.", "warning");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const res = await fetch(`${apiUrl}/trucking-invoices/standalone`, {
+        method: "POST",
+        headers: { ...headers(), "Content-Type": "application/json" },
+        body: JSON.stringify({
+          trucking_company_id: standForm.trucking_company_id,
+          trucking_fee: Number(standForm.trucking_fee),
+          description: standForm.description,
+          status: "UNPAID",
+        }),
+      });
+      if (res.ok) {
+        await res.json();
+        Swal.fire("Berhasil", "Invoice trucking (tanpa ASN) dibuat.", "success");
+        setIsModalOpen(false);
+        fetchAll();
+      } else { const el = await res.json(); Swal.fire("Gagal", el.message || "Gagal.", "error"); }
+    } catch { Swal.fire("Error", "Gagal membuat invoice.", "error"); } finally { setIsSaving(false); }
+  };
 
   const onAsnChange = async (asnId: any) => {
     const asn = asns.find(a => a.id === asnId);
@@ -170,6 +210,24 @@ export default function TruckingInvoicePage() {
               <button onClick={() => setIsModalOpen(false)} className="bg-brand-700 hover:bg-brand-800 p-1 rounded"><X className="w-4 h-4" /></button>
             </div>
             <div className="p-5 space-y-4">
+              {/* Mode: dengan ASN atau tanpa ASN */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Sumber Invoice</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setInvoiceMode("asn")}
+                    className={`p-3 rounded-xl border text-left text-sm font-semibold transition-colors ${invoiceMode === 'asn' ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300' : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}>
+                    📦 Dengan ASN
+                    <span className="block text-[10px] font-normal text-gray-500">Terhubung ke manifest</span>
+                  </button>
+                  <button type="button" onClick={() => setInvoiceMode("standalone")}
+                    className={`p-3 rounded-xl border text-left text-sm font-semibold transition-colors ${invoiceMode === 'standalone' ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300' : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}>
+                    🚚 Tanpa ASN
+                    <span className="block text-[10px] font-normal text-gray-500">Jasa trucking terpisah</span>
+                  </button>
+                </div>
+              </div>
+
+              {invoiceMode === "asn" ? (<>
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Pilih ASN (memakai trucking milik kita)</label>
                 <select value={selectedAsn?.id || ""} onChange={(e) => onAsnChange(e.target.value)} className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 dark:bg-gray-800 dark:text-white">
@@ -214,12 +272,45 @@ export default function TruckingInvoicePage() {
                   )}
                 </>
               )}
+              </>) : (
+              /* Standalone form — tanpa ASN */
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Trucking Company *</label>
+                  <select value={standForm.trucking_company_id} onChange={(e) => setStandForm({ ...standForm, trucking_company_id: e.target.value })} className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 dark:bg-gray-800 dark:text-white">
+                    <option value="">-- Pilih Trucking --</option>
+                    {truckings.map(t => <option key={t.id} value={t.id}>{t.name}{t.is_ours ? " (Milik Kita)" : ""}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Fee Jasa Trucking (Rp) *</label>
+                  <input type="number" min="0" value={standForm.trucking_fee} onChange={(e) => setStandForm({ ...standForm, trucking_fee: e.target.value })} placeholder="cth. 1500000" className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 dark:bg-gray-800 dark:text-white" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Deskripsi</label>
+                  <textarea value={standForm.description} onChange={(e) => setStandForm({ ...standForm, description: e.target.value })} rows={2} placeholder="cth. Pengiriman LCL Jakarta - Cikarang" className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 dark:bg-gray-800 dark:text-white" />
+                </div>
+                {standForm.trucking_fee && Number(standForm.trucking_fee) > 0 && (
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50/50 dark:bg-gray-800/40 space-y-1.5 text-sm">
+                    <div className="flex items-center justify-between text-gray-500"><span>Subtotal</span><span>{fmt(standForm.trucking_fee)}</span></div>
+                    <div className="flex items-center justify-between text-gray-500"><span>PPN 11%</span><span>{fmt(Number(standForm.trucking_fee) * 0.11)}</span></div>
+                    <div className="pt-1.5 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between text-base font-bold text-gray-800 dark:text-gray-100"><span>Total</span><span className="text-brand-600 dark:text-brand-400">{fmt(Number(standForm.trucking_fee) * 1.11)}</span></div>
+                  </div>
+                )}
+              </div>
+              )}
 
               <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex gap-2">
                 <button onClick={() => setIsModalOpen(false)} className="flex-1 py-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800">Batal</button>
-                <button onClick={generate} disabled={!calc || isSaving} className="flex-1 py-3 bg-brand-500 text-white font-bold rounded-xl shadow-lg hover:bg-brand-600 flex items-center justify-center gap-2 disabled:opacity-50">
-                  {isSaving ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Generate Invoice
-                </button>
+                {invoiceMode === "asn" ? (
+                  <button onClick={generate} disabled={!calc || isSaving} className="flex-1 py-3 bg-brand-500 text-white font-bold rounded-xl shadow-lg hover:bg-brand-600 flex items-center justify-center gap-2 disabled:opacity-50">
+                    {isSaving ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Generate Invoice
+                  </button>
+                ) : (
+                  <button onClick={generateStandalone} disabled={isSaving} className="flex-1 py-3 bg-brand-500 text-white font-bold rounded-xl shadow-lg hover:bg-brand-600 flex items-center justify-center gap-2 disabled:opacity-50">
+                    {isSaving ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Generate Invoice
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>
