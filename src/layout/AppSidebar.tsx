@@ -95,13 +95,6 @@ const internalStaffItems: NavItem[] = [
   },
 ];
 
-const clientPortalItems: NavItem[] = [
-  { icon: <GridIcon />, name: "Dasbor Saya", path: "/client/dashboard" },
-  { icon: <PageIcon />, name: "Rencana Barang Masuk", path: "/client/inbound" },
-  { icon: <BoxCubeIcon />, name: "Inventori Saya", path: "/client/inventory" },
-  { icon: <ListIcon />, name: "Permintaan Barang Keluar", path: "/client/outbound" },
-];
-
 const superAdminItems: NavItem[] = [
   {
     icon: <GridIcon />,
@@ -125,7 +118,7 @@ const AppSidebar: React.FC = () => {
 
   const renderMenuItems = (
     navItems: NavItem[],
-    menuType: "internal" | "client" | "admin"
+    menuType: "internal" | "admin"
   ) => (
     <ul className="flex flex-col gap-4">
       {navItems.map((nav, index) => (
@@ -231,7 +224,7 @@ const AppSidebar: React.FC = () => {
   );
 
   const [openSubmenu, setOpenSubmenu] = useState<{
-    type: "internal" | "client" | "admin";
+    type: "internal" | "admin";
     index: number;
   } | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
@@ -245,14 +238,14 @@ const AppSidebar: React.FC = () => {
   useEffect(() => {
     // Check if the current path matches any submenu item
     let submenuMatched = false;
-    ["internal", "client", "admin"].forEach((menuType) => {
-      const items = menuType === "internal" ? internalStaffItems : menuType === "client" ? clientPortalItems : superAdminItems;
+    ["internal", "admin"].forEach((menuType) => {
+      const items = menuType === "internal" ? internalStaffItems : superAdminItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
               setOpenSubmenu({
-                type: menuType as "internal" | "client" | "admin",
+                type: menuType as "internal" | "admin",
                 index,
               });
               submenuMatched = true;
@@ -281,7 +274,7 @@ const AppSidebar: React.FC = () => {
     }
   }, [openSubmenu]);
 
-  const handleSubmenuToggle = (index: number, menuType: "internal" | "client" | "admin") => {
+  const handleSubmenuToggle = (index: number, menuType: "internal" | "admin") => {
     setOpenSubmenu((prevOpenSubmenu) => {
       if (
         prevOpenSubmenu &&
@@ -346,23 +339,6 @@ const AppSidebar: React.FC = () => {
                 )}
               </h2>
               {renderMenuItems(internalStaffItems, "internal")}
-            </div>
-
-            <div className="">
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Portal Klien"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-              {renderMenuItems(clientPortalItems, "client")}
             </div>
 
             <div className="">
