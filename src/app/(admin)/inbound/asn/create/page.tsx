@@ -73,7 +73,8 @@ export default function CreateAsnPage() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   
   const [isLoading, setIsLoading] = useState(false);
-  
+  const [truckings, setTruckings] = useState<any[]>([]);
+
   const [formData, setFormData] = useState({
     forwarding_id: "", // Forwarding ID
     warehouse_id: "",
@@ -82,6 +83,7 @@ export default function CreateAsnPage() {
 
     vehicle_plate: "",
     trucking_company: "",
+    trucking_company_id: "",
     no_master_bl: "",
     tgl: "",
     tanggal_tiba: "",
@@ -101,10 +103,11 @@ export default function CreateAsnPage() {
   useEffect(() => {
     const fetchSelectData = async () => {
       try {
-        const [forwardingsRes, warehousesRes, masterConsigneesRes] = await Promise.all([
+        const [forwardingsRes, warehousesRes, masterConsigneesRes, truckingsRes] = await Promise.all([
           fetch(`${apiUrl}/forwardings`, { headers: { "Accept": "application/json" } }),
           fetch(`${apiUrl}/warehouses`, { headers: { "Accept": "application/json" } }),
           fetch(`${apiUrl}/consignees`, { headers: { "Accept": "application/json" } }),
+          fetch(`${apiUrl}/truckings`, { headers: { "Accept": "application/json" } }),
         ]);
 
         if (forwardingsRes.ok) {
@@ -124,6 +127,11 @@ export default function CreateAsnPage() {
           if (whs.length > 0) {
              setFormData(prev => ({ ...prev, warehouse_id: whs[0].id.toString() }));
           }
+        }
+
+        if (truckingsRes.ok) {
+          const trData = await truckingsRes.json();
+          setTruckings(trData.data || trData);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -406,13 +414,42 @@ export default function CreateAsnPage() {
 
                 <div>
                   <Label>Trucking Company</Label>
-                  <Input 
-                    type="text" 
-                    name="trucking_company"
-                    value={formData.trucking_company || ""}
-                    onChange={handleInputChange}
-                    placeholder="Nama Perusahaan Ekspedisi"
-                  />
+                  <div className="relative z-10">
+                    <select
+                      name="trucking_company"
+                      value={formData.trucking_company || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const sel = truckings.find(t => t.name === val);
+                        setFormData(prev => ({
+                          ...prev,
+                          trucking_company: val,
+                          trucking_company_id: sel ? String(sel.id) : "",
+                        }));
+                      }}
+                      className="w-full border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white px-4 py-2.5 text-sm focus:border-brand-500 focus:ring-brand-500 outline-none"
+                    >
+                      <option value="">-- Pilih Trucking --</option>
+                      {truckings.map((t) => (
+                        <option key={t.id} value={t.name}>
+                          {t.name}{t.is_ours ? " (Milik Kita)" : ""}
+                        </option>
+                      ))}
+                      <option value="Lainnya (Ketik Manual)">Lainnya (ketik manual)</option>
+                    </select>
+                    {formData.trucking_company === "Lainnya (Ketik Manual)" && (
+                      <Input
+                        type="text"
+                        name="trucking_company"
+                        value={formData.trucking_company_id}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, trucking_company: e.target.value, trucking_company_id: "" }));
+                        }}
+                        placeholder="Ketik nama trucking manual"
+                        className="mt-2"
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <div>

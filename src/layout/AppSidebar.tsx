@@ -52,6 +52,15 @@ const internalStaffItems: NavItem[] = [
     path: "/",
   },
   {
+    icon: <Truck className="w-5 h-5" />,
+    name: "Trucking Supplier",
+    subItems: [
+      { name: "Daftar Trucking", path: "/trucking", icon: <Truck className="w-4 h-4" /> },
+      { name: "Tarif Trucking", path: "/trucking/tarif", icon: <Banknote className="w-4 h-4" /> },
+      { name: "Invoice Trucking", path: "/trucking/invoice", icon: <Receipt className="w-4 h-4" /> },
+    ],
+  },
+  {
     icon: <BoxCubeIcon />,
     name: "Manajemen Barang Masuk",
     subItems: [
