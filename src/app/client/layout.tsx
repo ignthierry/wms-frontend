@@ -102,7 +102,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <main className="mx-auto max-w-lg px-4 py-5">{children}</main>
 
       {/* Bottom Navigation — seragam dengan AppBottomBar admin panel (rounded-t-3xl, ikon aktif bubble naik) */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-brand-100 bg-white/95 backdrop-blur-xl transition-colors dark:border-white/10 dark:bg-[#0d1220]/95">
+      <nav className="fixed inset-x-0 bottom-0 z-50 h-16 border-t border-brand-100 bg-white/95 backdrop-blur-xl transition-colors dark:border-white/10 dark:bg-[#0d1220]/95 lg:hidden rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
         <div className="flex max-w-lg items-stretch justify-between px-4 pb-[env(safe-area-inset-bottom)] lg:mx-auto">
           {NAV.map((item) => {
             const active = isActive(pathname, item.href);
