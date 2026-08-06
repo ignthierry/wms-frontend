@@ -190,6 +190,7 @@ export default function TruckingInvoicePage() {
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${inv.status === 'PAID' ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300'}`}>{inv.status}</span>
                     </td>
                     <td className="py-3 pr-4 text-right">
+                      <a href={`/trucking/invoice/${inv.id}/print`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold mr-2"><Printer className="w-3.5 h-3.5" /> Cetak</a>
                       {inv.status !== 'PAID' && (
                         <button onClick={() => markPaid(inv)} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-500 hover:bg-green-600 text-white text-xs font-semibold">Tandai Lunas</button>
                       )}
