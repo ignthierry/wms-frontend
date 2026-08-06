@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, use, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Cookies from "js-cookie";
 
 function PrintContent({ id }: { id: string }) {
   const [data, setData] = useState<any>(null);
@@ -14,8 +15,11 @@ function PrintContent({ id }: { id: string }) {
     const fetchInvoice = async () => {
       setIsLoading(true);
       try {
+        const h: any = { "Accept": "application/json" };
+        const token = Cookies.get("auth_token");
+        if (token) h["Authorization"] = `Bearer ${token}`;
         const res = await fetch(`${apiUrl}/trucking-invoices/${id}`, {
-          headers: { "Accept": "application/json" },
+          headers: h,
         });
         if (res.ok) {
           const json = await res.json();
