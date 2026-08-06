@@ -174,7 +174,7 @@ export default function TruckingInvoicePage() {
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Pilih ASN (memakai trucking milik kita)</label>
                 <select value={selectedAsn?.id || ""} onChange={(e) => onAsnChange(e.target.value)} className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 dark:bg-gray-800 dark:text-white">
                   <option value="">-- Pilih ASN --</option>
-                  {asns.map(a => <option key={a.id} value={a.id}>{a.asn_number} · {a.truckingCompany?.name || "Tanpa trucking"}</option>)}
+                  {asns.map(a => <option key={a.id} value={a.id}>{a.asn_number} · {a.trucking_company?.name || a.trucking_company || "Tanpa trucking"}</option>)}
                 </select>
               </div>
 
