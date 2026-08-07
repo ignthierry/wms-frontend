@@ -1,0 +1,136 @@
+/* ============================================================
+   LIQUID NAV — ported from meniscus-liquid-nav (MIT)
+   Layers bottom-up: cast (ground shadow) → skin (socketed SVG
+   path) → bead (accent) → tabs (icons+labels, icons ride --t).
+   ============================================================ */
+.mn {
+  position: relative;
+  width: min(460px, 100%);
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--mn-bar, rgba(15, 23, 42, 0.02));
+  border-radius: var(--dock-r, 18px);
+  transition: background 0.3s ease;
+}
+.mn.is-ready { background: transparent; }
+
+/* plate fill — light (WMS client) by default */
+.mn__cast,
+.mn__skin,
+.mn__bead,
+.mn__tabs { position: absolute; }
+
+.mn__cast {
+  inset: 46% 7% 6% 7%;
+  border-radius: 999px;
+  background: var(--mn-bar, #0f172a);
+  box-shadow: 0 10px 22px -8px rgba(0, 0, 0, 0.45), 0 32px 56px -20px rgba(0, 0, 0, 0.5);
+}
+
+.mn__skin {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.28));
+}
+
+.mn__fill {
+  fill: url(#mnPlate);
+  stroke: url(#mnRim);
+  stroke-width: 1;
+}
+
+/* Light plate (WMS client / default) */
+.mn .mn__plate-hi { stop-color: #ffffff; }
+.mn .mn__plate-lo { stop-color: #eef1f6; }
+.mn .mn__rim-hi { stop-color: #ffffff; stop-opacity: 0.95; }
+.mn .mn__rim-lo { stop-color: #ffffff; stop-opacity: 0.25; }
+
+/* Dark plate */
+.mn-dark .mn__plate-hi { stop-color: #1b1529; }
+.mn-dark .mn__plate-lo { stop-color: #0c0814; }
+.mn-dark .mn__rim-hi { stop-color: #ffffff; stop-opacity: 0.6; }
+.mn-dark .mn__rim-lo { stop-color: #ffffff; stop-opacity: 0.06; }
+
+/* The bead */
+.mn__bead {
+  top: var(--bead-cy, 0px);
+  left: 0;
+  width: var(--bead-d, 56px);
+  height: var(--bead-d, 56px);
+  margin: calc(var(--bead-d, 56px) / -2) 0 0 calc(var(--bead-d, 56px) / -2);
+  border-radius: 50%;
+  background: linear-gradient(168deg, color-mix(in srgb, rgb(var(--glow-rgb, 30 64 175)) 76%, #fff), rgb(var(--glow-rgb, 30 64 175)) 62%);
+  box-shadow:
+    0 0 0 1px rgb(var(--glow-rgb, 30 64 175) / 0.5),
+    0 0 26px 2px rgb(var(--glow-rgb, 30 64 175) / 0.32),
+    0 10px 18px -7px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.42),
+    inset 0 -3px 6px -3px rgba(26, 16, 34, 0.18);
+  will-change: transform;
+  pointer-events: none;
+}
+.mn:not(.is-ready) .mn__bead { opacity: 0; }
+
+/* Tabs */
+.mn__tabs {
+  inset: 0;
+  display: flex;
+  padding-inline: clamp(26px, 10.5%, 54px);
+}
+.mn__tab {
+  position: relative;
+  flex: 1;
+  display: block;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 14px;
+  --t: 0; /* 0=rest, 1=inside bead */
+  outline: none;
+}
+.mn__tab:focus-visible { outline: 2px solid var(--acc, #1e40af); outline-offset: -3px; }
+
+.mn__icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  color: color-mix(in oklab, var(--mn-icon-off, #8b93a7) calc((1 - var(--t, 0)) * 100%), var(--mn-icon-on, #0f172a));
+  transform: translate(-50%, -50%) translateY(calc(var(--t, 0) * var(--rise, 38px) * -1));
+  will-change: transform;
+}
+.mn-dark .mn__icon { --mn-icon-off: #a79eb8; --mn-icon-on: #1a1420; }
+.mn-dark .mn__label { color: var(--acc, #c9f24a); }
+.mn__label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 14%;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--acc, #1e40af);
+  opacity: 0;
+  transform: translateY(calc((1 - var(--t, 0)) * 6px));
+  pointer-events: none;
+  white-space: nowrap;
+  text-align: center;
+}
+.mn__tab[aria-selected="true"] .mn__label,
+.mn.is-dragging .mn__label { opacity: var(--t, 0); }
+
+@media (max-width: 400px) {
+  .mn__icon { width: 22px; height: 22px; }
+  .mn__label { font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mn * { animation-duration: 0.01ms !important; }
+}
