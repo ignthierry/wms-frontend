@@ -256,7 +256,7 @@ export default function LiquidNav({ items, root, className = "", dark }: Props) 
     const onMove = (e: PointerEvent) => {
       if (e.pointerId !== S.pid) return;
       if (!S.dragging && Math.abs(e.clientX - startX) < 8) return;
-      if (!S.dragging) { S.dragging = true; dock!.classList.add("is-dragging"); dock!.setPointerCapture(e.pointerId); }
+      if (!S.dragging) { S.dragging = true; dock!.classList.add("is-dragging"); try { dock!.setPointerCapture(e.pointerId); } catch {} }
       e.preventDefault();
       const left = dock!.getBoundingClientRect().left;
       S.target = clamp(e.clientX - left, G.slots[0], G.slots[G.slots.length - 1]);
