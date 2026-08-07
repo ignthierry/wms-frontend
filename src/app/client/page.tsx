@@ -59,7 +59,13 @@ export default function ClientDashboardPage() {
   const m = data?.metrics || {};
   const consignees = data?.consignees || [];
   const items = data?.recent_items || [];
-  const userName = data?.consignees?.[0]?.name || "";
+  // Nama EMKL/forwarding dari data user login (localStorage "user"); fallback nama konsignee pertama
+  let userName = "";
+  try {
+    const u = localStorage.getItem("user");
+    if (u) userName = JSON.parse(u)?.name || "";
+  } catch {}
+  if (!userName) userName = data?.consignees?.[0]?.name || "";
 
   // KPI urut sesuai alur logistik: Pending > In Gudang > Siap Kirim
     const kpis = [
