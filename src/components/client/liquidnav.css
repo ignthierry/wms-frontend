@@ -5,16 +5,27 @@
    ============================================================ */
 .mn {
   position: relative;
-  width: min(460px, 100%);
+  width: var(--mn-w, min(460px, 100%));
+  height: var(--mn-h, 76px);
   touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
-  background: var(--mn-bar, rgba(15, 23, 42, 0.02));
+  background: var(--mn-bar, #f4f6fa);
   border-radius: var(--dock-r, 18px);
   transition: background 0.3s ease;
+  flex: none;
 }
 .mn.is-ready { background: transparent; }
 
-/* plate fill — light (WMS client) by default */
+/* ---- plate fills: light default, .mn-dark = dark ---- */
+.mn__plate-hi { stop-color: #ffffff; }
+.mn__plate-lo { stop-color: #eef1f6; }
+.mn__rim-hi { stop-color: #ffffff; stop-opacity: 0.95; }
+.mn__rim-lo { stop-color: #ffffff; stop-opacity: 0.25; }
+.mn-dark .mn__plate-hi { stop-color: #1b1529; }
+.mn-dark .mn__plate-lo { stop-color: #0c0814; }
+.mn-dark .mn__rim-hi { stop-color: #ffffff; stop-opacity: 0.55; }
+.mn-dark .mn__rim-lo { stop-color: #ffffff; stop-opacity: 0.06; }
+
 .mn__cast,
 .mn__skin,
 .mn__bead,
@@ -36,22 +47,8 @@
 }
 
 .mn__fill {
-  fill: url(#mnPlate);
-  stroke: url(#mnRim);
   stroke-width: 1;
 }
-
-/* Light plate (WMS client / default) */
-.mn .mn__plate-hi { stop-color: #ffffff; }
-.mn .mn__plate-lo { stop-color: #eef1f6; }
-.mn .mn__rim-hi { stop-color: #ffffff; stop-opacity: 0.95; }
-.mn .mn__rim-lo { stop-color: #ffffff; stop-opacity: 0.25; }
-
-/* Dark plate */
-.mn-dark .mn__plate-hi { stop-color: #1b1529; }
-.mn-dark .mn__plate-lo { stop-color: #0c0814; }
-.mn-dark .mn__rim-hi { stop-color: #ffffff; stop-opacity: 0.6; }
-.mn-dark .mn__rim-lo { stop-color: #ffffff; stop-opacity: 0.06; }
 
 /* The bead */
 .mn__bead {
@@ -70,6 +67,7 @@
     inset 0 -3px 6px -3px rgba(26, 16, 34, 0.18);
   will-change: transform;
   pointer-events: none;
+  z-index: 1;
 }
 .mn:not(.is-ready) .mn__bead { opacity: 0; }
 
@@ -81,7 +79,8 @@
 }
 .mn__tab {
   position: relative;
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   display: block;
   height: 100%;
   padding: 0;
@@ -90,9 +89,8 @@
   font: inherit;
   color: inherit;
   cursor: pointer;
-  border-radius: 14px;
-  --t: 0; /* 0=rest, 1=inside bead */
   outline: none;
+  --t: 0;
 }
 .mn__tab:focus-visible { outline: 2px solid var(--acc, #1e40af); outline-offset: -3px; }
 
@@ -107,12 +105,13 @@
   will-change: transform;
 }
 .mn-dark .mn__icon { --mn-icon-off: #a79eb8; --mn-icon-on: #1a1420; }
-.mn-dark .mn__label { color: var(--acc, #c9f24a); }
+
 .mn__label {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 14%;
+  align-self: baseline;
+  bottom: 12%;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -122,6 +121,8 @@
   pointer-events: none;
   white-space: nowrap;
   text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .mn__tab[aria-selected="true"] .mn__label,
 .mn.is-dragging .mn__label { opacity: var(--t, 0); }
