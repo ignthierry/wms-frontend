@@ -10,6 +10,7 @@ import {
   FileText,
   ScanLine,
   LogOut,
+  UserRound,
   Sun,
   Moon,
 } from "lucide-react";
@@ -27,6 +28,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const router = useRouter();
   const [dark, setDark] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
 
   useEffect(() => {
     // Sync theme with main WMS (localStorage "theme")
@@ -50,21 +52,40 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <div className="min-h-screen bg-brand-25/60 pb-24 text-gray-800 transition-colors dark:bg-[#0a0e1a] dark:text-gray-100">
-      {/* Floating account menu — tombol dark mode & logout (header atas disembunyikan) */}
-      <div className="fixed right-3 top-3 z-50 flex flex-col items-center gap-1.5 lg:hidden">
+      {/* Account panel — satu lingkaran akun; klik → dua tombol (dark & logout) menetas dengan animasi */}
+      <div className="fixed right-3 top-3 z-50 flex flex-col items-end gap-2 lg:hidden">
+        {/* Tombol aksi yang muncul hanya saat accountOpen */}
+        <div className="flex flex-col items-end gap-1.5">
+          <div
+            className={`flex flex-col items-end gap-1.5 transition-all duration-300 ease-out origin-top ${
+              accountOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-90 -translate-y-2 pointer-events-none"
+            }`}
+          >
+            <button
+              onClick={() => setDark(!dark)}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-brand-100 bg-white/90 text-brand-600 shadow-lg shadow-brand-600/10 backdrop-blur-xl transition hover:bg-brand-50 dark:border-white/10 dark:bg-white/15 dark:text-amber-300 dark:hover:bg-white/20"
+              title={dark ? "Mode terang" : "Mode gelap"}
+            >
+              {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-brand-100 bg-white/90 text-gray-500 shadow-lg shadow-brand-600/10 backdrop-blur-xl transition-all hover:border-rose-400/40 hover:bg-rose-50 hover:text-rose-500 dark:border-white/10 dark:bg-white/15 dark:text-gray-300 dark:hover:border-rose-500/40 dark:hover:text-rose-400"
+              title="Keluar"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+        {/* Avatar akun — selalu tampil, berputar saat buka/tutup */}
         <button
-          onClick={() => setDark(!dark)}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-brand-100 bg-white/90 text-brand-600 shadow-lg shadow-brand-600/10 backdrop-blur-xl transition hover:bg-brand-50 dark:border-white/10 dark:bg-white/10 dark:text-amber-300 dark:hover:bg-white/15"
-          title={dark ? "Mode terang" : "Mode gelap"}
+          onClick={() => setAccountOpen(!accountOpen)}
+          className={`flex h-11 w-11 items-center justify-center rounded-full border border-brand-200 bg-white text-brand-600 shadow-lg shadow-brand-600/20 backdrop-blur-xl transition-transform duration-300 dark:border-white/15 dark:bg-white/10 dark:text-amber-100 ${
+            accountOpen ? "rotate-90 scale-105" : "rotate-0"
+          }`}
+          title="Akun"
         >
-          {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </button>
-        <button
-          onClick={handleLogout}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-brand-100 bg-white/90 text-gray-500 shadow-lg shadow-brand-600/10 backdrop-blur-xl transition hover:border-rose-400/40 hover:bg-rose-50 hover:text-rose-500 dark:border-white/10 dark:bg-white/10 dark:text-gray-400 dark:hover:border-rose-500/40 dark:hover:text-rose-400"
-          title="Keluar"
-        >
-          <LogOut className="h-5 w-5" />
+          <UserRound className="h-5.5 w-5.5" />
         </button>
       </div>
 
