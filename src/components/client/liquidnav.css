@@ -26,10 +26,10 @@
 .mn-dark .mn__rim-hi { stop-color: #ffffff; stop-opacity: 0.55; }
 .mn-dark .mn__rim-lo { stop-color: #ffffff; stop-opacity: 0.06; }
 
-.mn__cast,
-.mn__skin,
-.mn__bead,
-.mn__tabs { position: absolute; }
+.mn__cast { position: absolute; z-index: 0; }
+.mn__skin { position: absolute; z-index: 1; }
+.mn__tabs { position: absolute; z-index: 3; }
+.mn__bead { position: absolute; z-index: 2; }
 
 .mn__cast {
   inset: 46% 7% 6% 7%;

@@ -42,6 +42,7 @@ const mixRGB = (a: [number, number, number], b: [number, number, number], t: num
 export default function LiquidNav({ items, root, className = "", dark }: Props) {
   const pathname = usePathname();
   const [isDark, setIsDark] = useState<boolean>(dark ?? false);
+  const [ready, setReady] = useState(false);
 
   const dockRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -281,7 +282,7 @@ export default function LiquidNav({ items, root, className = "", dark }: Props) 
       if (!measure()) return;
       if (anim) goto(S.current);        // re-resolve to current slot
       else { if (G.slots[S.current] != null) { S.x = S.target = G.slots[S.current]; S.v = 0; } paint(); }
-      dock!.classList.add("is-ready");
+      setReady(true);
     }
     layout(false);
     const ro = new ResizeObserver(() => layout(false));
@@ -322,7 +323,7 @@ export default function LiquidNav({ items, root, className = "", dark }: Props) 
   return (
     <div
       ref={dockRef}
-      className={`mn ${resolvedDark ? "mn-dark" : ""} ${className}`}
+      className={`mn ${resolvedDark ? "mn-dark" : ""} ${ready ? "is-ready" : ""} ${className}`}
       style={{ height: "var(--mn-h, 76px)" } as any}
       data-live
     >
