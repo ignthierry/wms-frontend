@@ -327,8 +327,8 @@ export default function LiquidNav({ items, root, className = "", dark }: Props) 
       style={{ height: "var(--mn-h, 76px)" } as any}
       data-live
     >
-      <div className="mn__cast" />
-      <svg ref={svgRef} className="mn__skin" width="100%" height="100%" aria-hidden="true">
+      <div className="mn__cast" style={{ position: "absolute", zIndex: 0 }} />
+      <svg ref={svgRef} className="mn__skin" style={{ position: "absolute", zIndex: 1 }} width="100%" height="100%" aria-hidden="true">
         <defs>
           <linearGradient id={plateId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" className="mn__plate-hi" />
@@ -341,8 +341,8 @@ export default function LiquidNav({ items, root, className = "", dark }: Props) 
         </defs>
         <path ref={fillRef} className="mn__fill" style={{ fill: `url(#${plateId})`, stroke: `url(#${rimId})` }} />
       </svg>
-      <div ref={beadRef} className="mn__bead" aria-hidden="true" />
-      <div className="mn__tabs">
+      <div ref={beadRef} className="mn__bead" style={{ position: "absolute", zIndex: 2 }} aria-hidden="true" />
+      <div className="mn__tabs" style={{ position: "absolute", zIndex: 3 }}>
         {items.map((item, i) => {
           const Icon = item.icon;
           const isActive = i === active;
