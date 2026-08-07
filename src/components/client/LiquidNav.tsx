@@ -271,7 +271,10 @@ export default function LiquidNav({ items, root, className = "", dark }: Props) 
       let near = 0, nd = Infinity;
       G.slots.forEach((s: number, i: number) => { const d = Math.abs(S.target - s); if (d < nd) { nd = d; near = i; } });
       goto(near);
-      /* let the Link route too */
+      /* navigate to the snapped tab (like a real click) — but skip if already on it */
+      const currentIdx = S.current;
+      if (currentIdx === near) return;
+      tabs[near]?.click();         // triggers the Link navigation
     };
     dock!.addEventListener("pointerdown", onDown);
     dock!.addEventListener("pointermove", onMove);
