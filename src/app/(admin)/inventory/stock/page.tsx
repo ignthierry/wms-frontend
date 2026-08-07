@@ -236,25 +236,25 @@ export default function StockSummaryPage() {
 
       <div className="bg-white p-5 rounded-xl border border-gray-200 dark:bg-gray-900 dark:border-gray-800 shadow-sm">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-          <div className="relative w-full sm:w-64">
+          <div className="relative w-full sm:w-64 min-w-0">
             <input 
               type="text" 
               placeholder="Cari barang, kode, pos, BL..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white outline-none"
+              className="w-full min-w-0 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white outline-none"
             />
             <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
           </div>
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
-              <Calendar className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">Periode Laporan:</span>
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto min-w-0">
+            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700 w-full sm:w-auto min-w-0 max-w-full">
+              <Calendar className="w-4 h-4 text-gray-500 flex-none" />
+              <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap flex-none">Periode:</span>
               <input 
                 type="datetime-local"
                 value={reportPeriod}
                 onChange={(e) => setReportPeriod(e.target.value)}
-                className="bg-transparent text-sm font-medium text-gray-900 dark:text-white outline-none [color-scheme:light] dark:[color-scheme:dark]"
+                className="bg-transparent text-sm font-medium text-gray-900 dark:text-white outline-none [color-scheme:light] dark:[color-scheme:dark] min-w-0 flex-1 appearance-none"
               />
             </div>
             <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors text-sm font-medium w-full sm:w-auto justify-center">
