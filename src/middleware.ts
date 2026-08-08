@@ -47,6 +47,6 @@ export const config = {
      * - images (public images directory)
      * - favicon.ico (favicon file)
      */
-    '/((?!api|_next/static|_next/image|images|favicon.ico|manifest.webmanifest|sw.js).*)',
+    '/((?!api|_next/static|_next/image|images|icons|favicon.ico|manifest.json|manifest.webmanifest|sw.js).*)',
   ],
 };
