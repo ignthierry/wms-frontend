@@ -33,6 +33,24 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/client', request.url));
   }
 
+  // Operator field: hanya boleh buka rute operasional gudang (receiving, QC, packing, outbound QC)
+  if (token && role === 'operator_field' && isAdminPath) {
+    const allowedOperatorPaths = [
+      '/inbound/receiving',
+      '/inbound/qc',
+      '/outbound/qc',
+      '/outbound/packing',
+    ];
+    const isAllowedOperatorPath = allowedOperatorPaths.some(
+      (p) =>
+        request.nextUrl.pathname === p ||
+        request.nextUrl.pathname.startsWith(p + '/')
+    );
+    if (!isAllowedOperatorPath) {
+      return NextResponse.redirect(new URL('/inbound/receiving', request.url));
+    }
+  }
+
   return NextResponse.next();
 }
 

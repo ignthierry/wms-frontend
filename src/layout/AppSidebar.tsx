@@ -124,6 +124,40 @@ const superAdminItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  const [userRole, setUserRole] = useState<string>("");
+
+  useEffect(() => {
+    try {
+      const u = localStorage.getItem("user");
+      if (u) {
+        const parsed = JSON.parse(u);
+        setUserRole(parsed.role?.role_name || "");
+      }
+    } catch {}
+  }, []);
+
+  // Items yang boleh dilihat operator_field: hanya manajemen masuk (receiving+QC) & keluar (QC outbound+packing)
+  const operatorItems: NavItem[] = [
+    {
+      icon: <BoxCubeIcon />,
+      name: "Manajemen Barang Masuk",
+      subItems: [
+        { name: "Receiving & Tallying (LCL)", path: "/inbound/receiving", icon: <ArrowRightLeft className="w-4 h-4" /> },
+        { name: "Quality Control (QC)", path: "/inbound/qc", icon: <AlertTriangle className="w-4 h-4" /> },
+      ],
+    },
+    {
+      icon: <PageIcon />,
+      name: "Manajemen Barang Keluar",
+      subItems: [
+        { name: "Outbound QC", path: "/outbound/qc", icon: <Camera className="w-4 h-4" /> },
+        { name: "Pengemasan & Verifikasi", path: "/outbound/packing", icon: <CheckSquare className="w-4 h-4" /> },
+      ],
+    },
+  ];
+
+  // Sidebar yang dirender tergantung role
+  const isOperatorField = userRole === "operator_field";
 
   const renderMenuItems = (
     navItems: NavItem[],
@@ -333,39 +367,60 @@ const AppSidebar: React.FC = () => {
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
-            <div>
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Staf Internal"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-              {renderMenuItems(internalStaffItems, "internal")}
-            </div>
+            {isOperatorField ? (
+              <div>
+                <h2
+                  className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                    !isExpanded && !isHovered
+                      ? "lg:justify-center"
+                      : "justify-start"
+                  }`}
+                >
+                  {isExpanded || isHovered || isMobileOpen ? (
+                    "Operasional Gudang"
+                  ) : (
+                    <HorizontaLDots />
+                  )}
+                </h2>
+                {renderMenuItems(operatorItems, "internal")}
+              </div>
+            ) : (
+              <>
+                <div>
+                  <h2
+                    className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                      !isExpanded && !isHovered
+                        ? "lg:justify-center"
+                        : "justify-start"
+                    }`}
+                  >
+                    {isExpanded || isHovered || isMobileOpen ? (
+                      "Staf Internal"
+                    ) : (
+                      <HorizontaLDots />
+                    )}
+                  </h2>
+                  {renderMenuItems(internalStaffItems, "internal")}
+                </div>
 
-            <div className="">
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Super Admin"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-              {renderMenuItems(superAdminItems, "admin")}
-            </div>
+                <div className="">
+                  <h2
+                    className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                      !isExpanded && !isHovered
+                        ? "lg:justify-center"
+                        : "justify-start"
+                    }`}
+                  >
+                    {isExpanded || isHovered || isMobileOpen ? (
+                      "Super Admin"
+                    ) : (
+                      <HorizontaLDots />
+                    )}
+                  </h2>
+                  {renderMenuItems(superAdminItems, "admin")}
+                </div>
+              </>
+            )}
           </div>
         </nav>
 

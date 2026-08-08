@@ -41,7 +41,15 @@ export default function SignInForm() {
           const role = data.user.role?.role_name || "";
           Cookies.set("user_role", role, { expires: isChecked ? 7 : 1 });
         }
-        window.location.href = (data.user?.role?.role_name === "forwarding") ? "/client" : "/";
+        // Redirect berdasarkan role
+        const role = data.user?.role?.role_name || "";
+        if (role === "forwarding") {
+          window.location.href = "/client";
+        } else if (role === "operator_field") {
+          window.location.href = "/inbound/receiving";
+        } else {
+          window.location.href = "/";
+        }
       } else {
         setError(data.message || "Login failed");
         setIsLoading(false);
