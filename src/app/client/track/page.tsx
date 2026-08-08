@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { ScanLine, Search, Package, MapPin, FileText, History, ImageIcon } from "lucide-react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Camera, X, Search, Package, MapPin, FileText, History, ImageIcon, ScanLine } from "lucide-react";
+import { Html5Qrcode } from "html5-qrcode";
 import { apiBase, authHeaders, statusLabel, statusColor, fullIDR, photoUrl } from "@/components/client/api";
 
 export default function ClientTrackPage() {
@@ -10,10 +11,13 @@ export default function ClientTrackPage() {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [scanOpen, setScanOpen] = useState(false);
+  const [scanError, setScanError] = useState("");
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerContainerId = "client-qr-scanner";
+  const scanLock = useRef(false);
 
-  const track = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    const q = identifier.trim();
+  const runTrack = useCallback(async (q: string) => {
     if (!q) return;
     setLoading(true);
     setError("");
@@ -29,6 +33,57 @@ export default function ClientTrackPage() {
       setError(e.message || "Terjadi kesalahan");
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const track = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    await runTrack(identifier.trim());
+  };
+
+  // Close scanner on unmount
+  useEffect(() => {
+    return () => {
+      if (scannerRef.current) {
+        try { scannerRef.current.stop(); } catch {}
+        try { scannerRef.current.clear(); } catch {}
+      }
+    };
+  }, []);
+
+  const openScanner = async () => {
+    setScanError("");
+    setScanOpen(true);
+    // Wait for modal to render
+    setTimeout(async () => {
+      try {
+        scannerRef.current = new Html5Qrcode("client-qr-scanner");
+        await scannerRef.current.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 240, height: 240 } },
+          (decodedText) => {
+            // Auto-detect: scan → set identifier → track
+            if (scanLock.current) return;
+            scanLock.current = true;
+            setIdentifier(decodedText);
+            closeScanner();
+            runTrack(decodedText);
+            setTimeout(() => { scanLock.current = false; }, 1500);
+          },
+          () => {}
+        );
+      } catch (err: any) {
+        setScanError(err?.message || "Tidak dapat mengakses kamera");
+      }
+    }, 150);
+  };
+
+  const closeScanner = () => {
+    setScanOpen(false);
+    if (scannerRef.current) {
+      try { scannerRef.current.stop(); } catch {}
+      try { scannerRef.current.clear(); } catch {}
+      scannerRef.current = null;
     }
   };
 
@@ -55,6 +110,14 @@ export default function ClientTrackPage() {
           />
         </div>
         <button
+          type="button"
+          onClick={openScanner}
+          title="Scan QR"
+          className="flex items-center justify-center rounded-xl border border-brand-200 bg-white px-3.5 text-brand-600 shadow-sm transition hover:bg-brand-50 active:scale-95 dark:border-white/10 dark:bg-white/5 dark:text-brand-300 dark:hover:bg-white/10"
+        >
+          <Camera className="h-5 w-5" />
+        </button>
+        <button
           type="submit"
           disabled={loading}
           className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-md shadow-brand-600/25 transition hover:bg-brand-700 active:scale-95 disabled:opacity-50"
@@ -62,6 +125,54 @@ export default function ClientTrackPage() {
           <Search className="h-4 w-4" /> Lacak
         </button>
       </form>
+
+      {/* QR Scanner Modal */}
+      <AnimatePresence>
+        {scanOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+            onClick={closeScanner}
+          >
+            <motion.div
+              initial={{ scale: 0.92, y: 16 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.92, y: 16 }}
+              transition={{ type: "spring", duration: 0.4 }}
+              className="w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-[#111827]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-5 py-4">
+                <div>
+                  <h3 className="text-base font-bold text-gray-800 dark:text-gray-100">Scan QR Barang</h3>
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Arahkan kamera ke QR code barang</p>
+                </div>
+                <button
+                  onClick={closeScanner}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20"
+                >
+                  <X className="h-4.5 w-4.5" />
+                </button>
+              </div>
+              <div className="px-5 pb-5">
+                <div className="overflow-hidden rounded-2xl bg-black">
+                  <div id="client-qr-scanner" className="w-full [&_video]:w-full [&_video]:object-cover" style={{ minHeight: 280 }} />
+                </div>
+                {scanError && (
+                  <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2.5 text-center text-xs text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">
+                    {scanError}
+                  </p>
+                )}
+                <p className="mt-3 text-center text-[11px] text-gray-400">
+                  Scan otomatis — hasil langsung muncul setelah terdeteksi
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {loading && (
         <div className="flex h-32 items-center justify-center">
