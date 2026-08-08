@@ -750,3 +750,27 @@ span.flatpickr-weekday,
   opacity: 0.8;
   cursor: grabbing; /* Changes the cursor to indicate dragging */
 }
+
+/* ============ Animated auth background (mobile) ============ */
+.animated-auth-bg {
+  background: linear-gradient(-45deg, #465fff, #7c3aed, #0ea5e9, #465fff);
+  background-size: 400% 400%;
+  animation: auth-gradient-shift 12s ease infinite;
+  opacity: 0.85;
+}
+
+.dark .animated-auth-bg {
+  opacity: 0.55;
+}
+
+@keyframes auth-gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
