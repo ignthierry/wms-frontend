@@ -1,0 +1,53 @@
+{
+  "background_color": "#ffffff",
+  "description": "WarehousePro Logistics Portal — pantau barang, scan QR, lacak kiriman, dan kelola stok gudang Anda dari mana saja.",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "WarehousePro WMS",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "WMS WPro",
+  "start_url": "/",
+  "theme_color": "#465FFF",
+  "id": "/",
+  "categories": ["business", "productivity"],
+  "lang": "id",
+  "icons": [
+    {
+      "src": "/icons/icon-48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-1024-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
