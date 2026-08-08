@@ -27,12 +27,13 @@ export const metadata = {
     ],
     apple: [{ url: "/icons/icon-180.png", sizes: "180x180", type: "image/png" }],
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    themeColor: "#465FFF",
-  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#465FFF",
 };
 
 export default function RootLayout({
